@@ -43,4 +43,8 @@ jobs:
         run: docker rm -f reactjs-app-container
 
       - name: Run Docker Container
-        run: docker run -d -p 3001:80 --name reactjs-app-container muhammadyusuf2766/gssiot-dashboard-client.24.05.2026
+        run: docker run -d \
+          -p 127.0.0.1:3001:80 \
+          --restart unless-stopped \
+          --name reactjs-app-container \
+          muhammadyusuf2766/gssiot-dashboard-client.24.05.2026:latest

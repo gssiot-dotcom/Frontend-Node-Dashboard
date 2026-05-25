@@ -28,6 +28,7 @@ import {
 	X,
 } from 'lucide-react'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import { Label } from './ui/label'
 
 interface Gateway {
@@ -689,7 +690,7 @@ export function BuildingImagesUploadDialog({
 		}
 
 		const nextImages: BuildingImageItem[] = allowedFiles.map(file => ({
-			id: `${crypto.randomUUID()}-${file.name}`,
+			id: `${uuidv4()}-${file.name}`,
 			file,
 			previewUrl: URL.createObjectURL(file),
 		}))
@@ -739,7 +740,7 @@ export function BuildingImagesUploadDialog({
 		return () => {
 			images.forEach(image => URL.revokeObjectURL(image.previewUrl))
 		}
-	}, [])
+	}, [images])
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
