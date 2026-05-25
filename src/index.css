@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root {
+		--font-inter: 'Inter', 'Noto Sans KR', sans-serif;
+		--font-korean: 'Noto Sans KR', 'Inter', sans-serif;
+
+		/* ── Light Theme ── */
+		--background: 210 20% 97%;
+		--foreground: 222 35% 12%;
+
+		--card: 0 0% 100%;
+		--card-foreground: 222 35% 12%;
+
+		--popover: 0 0% 100%;
+		--popover-foreground: 222 35% 12%;
+
+		--primary: 199 89% 40%;
+		--primary-foreground: 0 0% 100%;
+
+		--secondary: 210 20% 92%;
+		--secondary-foreground: 222 35% 20%;
+
+		--muted: 210 20% 94%;
+		--muted-foreground: 215 16% 47%;
+
+		--accent: 199 89% 40%;
+		--accent-foreground: 0 0% 100%;
+
+		--destructive: 0 72% 51%;
+		--destructive-foreground: 0 0% 98%;
+
+		--border: 214 20% 88%;
+		--input: 214 20% 88%;
+		--ring: 199 89% 40%;
+
+		--chart-1: 199 89% 40%;
+		--chart-2: 162 63% 35%;
+		--chart-3: 270 60% 52%;
+		--chart-4: 43 74% 55%;
+		--chart-5: 0 72% 51%;
+
+		--radius: 0.75rem;
+
+		--gss-safe: 199 89% 38%;
+		--gss-caution: 142 71% 42%;
+		--gss-warning: 45 93% 42%;
+		--gss-danger: 0 72% 51%;
+		--gss-offline: 215 14% 55%;
+		--gss-glass: 210 20% 96%;
+		--gss-glass-border: 214 20% 86%;
+
+		/* Sidebar — light variant */
+		--sidebar-background: 0 0% 100%;
+		--sidebar-foreground: 222 35% 18%;
+		--sidebar-primary: 199 89% 40%;
+		--sidebar-primary-foreground: 0 0% 100%;
+		--sidebar-accent: 210 20% 94%;
+		--sidebar-accent-foreground: 222 35% 18%;
+		--sidebar-border: 214 20% 88%;
+		--sidebar-ring: 199 89% 40%;
+	}
+
+	.dark {
+		--background: 222 47% 6%;
+		--foreground: 210 40% 96%;
+
+		--card: 222 40% 10%;
+		--card-foreground: 210 40% 96%;
+
+		--popover: 222 40% 10%;
+		--popover-foreground: 210 40% 96%;
+
+		--primary: 199 89% 48%;
+		--primary-foreground: 222 47% 6%;
+
+		--secondary: 222 30% 16%;
+		--secondary-foreground: 210 40% 90%;
+
+		--muted: 222 30% 14%;
+		--muted-foreground: 215 20% 55%;
+
+		--accent: 199 89% 48%;
+		--accent-foreground: 222 47% 6%;
+
+		--destructive: 0 72% 51%;
+		--destructive-foreground: 0 0% 98%;
+
+		--border: 222 30% 18%;
+		--input: 222 30% 18%;
+		--ring: 199 89% 48%;
+
+		--chart-1: 199 89% 48%;
+		--chart-2: 162 63% 41%;
+		--chart-3: 270 60% 55%;
+		--chart-4: 43 74% 66%;
+		--chart-5: 0 72% 51%;
+
+		--gss-safe: 199 89% 48%;
+		--gss-caution: 142 70% 50%;
+		--gss-warning: 45 93% 47%;
+		--gss-danger: 0 72% 51%;
+		--gss-offline: 215 20% 40%;
+		--gss-glass: 222 40% 12%;
+		--gss-glass-border: 222 30% 22%;
+
+		--sidebar-background: 222 44% 8%;
+		--sidebar-foreground: 210 40% 90%;
+		--sidebar-primary: 199 89% 48%;
+		--sidebar-primary-foreground: 222 47% 6%;
+		--sidebar-accent: 222 30% 14%;
+		--sidebar-accent-foreground: 210 40% 90%;
+		--sidebar-border: 222 30% 16%;
+		--sidebar-ring: 199 89% 48%;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+	}
+	body {
+		@apply bg-background text-foreground font-inter;
+	}
+}
+
+@layer utilities {
+	/* ── Glass: adapts to theme ── */
+	.glass {
+		@apply bg-black/[0.04] backdrop-blur-xl border border-black/[0.07];
+	}
+	.dark .glass {
+		@apply bg-white/[0.04] backdrop-blur-xl border border-white/[0.08];
+	}
+	.glass-strong {
+		@apply bg-black/[0.06] backdrop-blur-2xl border border-black/[0.10];
+	}
+	.dark .glass-strong {
+		@apply bg-white/[0.07] backdrop-blur-2xl border border-white/[0.12];
+	}
+
+	/* ── Glows ── */
+	.glow-primary {
+		box-shadow:
+			0 0 20px hsl(199 89% 40% / 0.12),
+			0 0 60px hsl(199 89% 40% / 0.05);
+	}
+	.dark .glow-primary {
+		box-shadow:
+			0 0 20px hsl(199 89% 48% / 0.15),
+			0 0 60px hsl(199 89% 48% / 0.05);
+	}
+	.glow-warning {
+		box-shadow:
+			0 0 20px hsl(45 93% 42% / 0.18),
+			0 0 60px hsl(45 93% 42% / 0.07);
+	}
+	.dark .glow-warning {
+		box-shadow:
+			0 0 20px hsl(45 93% 47% / 0.2),
+			0 0 60px hsl(45 93% 47% / 0.08);
+	}
+	.glow-caution {
+		box-shadow:
+			0 0 20px hsla(142 71% 42% / 0.2),
+			0 0 60px hsl(142 71% 42% / 0.08);
+	}
+
+	.glow-danger {
+		box-shadow:
+			0 0 20px hsl(0 72% 51% / 0.18),
+			0 0 60px hsl(0 72% 51% / 0.07);
+	}
+	.dark .glow-danger {
+		box-shadow:
+			0 0 20px hsl(0 72% 51% / 0.25),
+			0 0 60px hsl(0 72% 51% / 0.1);
+	}
+
+	/* ── Text gradient: stays vivid in both themes ── */
+	.text-gradient {
+		@apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500;
+	}
+	.dark .text-gradient {
+		@apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400;
+	}
+}

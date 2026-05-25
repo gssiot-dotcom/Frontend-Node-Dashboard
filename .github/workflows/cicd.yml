@@ -1,0 +1,46 @@
+name: Deploy GSS Frontend Application
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+          --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
+          --build-arg VITE_REACT_BASE_URL=${{ secrets.VITE_REACT_BASE_URL }} \
+          --build-arg VITE_S3_ASSET_BASE_URL=${{ secrets.VITE_S3_ASSET_BASE_URL }} \
+          --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
+          --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          --build-arg S3_BUCKET_PROD=${{ secrets.S3_BUCKET_PROD }} \
+          -t muhammadyusuf2766/gssiot-dashboard-client.24.05.2026 -f DockerFile .
+
+      - name: Publish Image to Docker Hub
+        run: docker push muhammadyusuf2766/gssiot-dashboard-client.24.05.2026:latest
+      - name: Remove unused Docker images
+        run: docker system prune -af
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull image from Docker Hub
+        run: docker pull muhammadyusuf2766/gssiot-dashboard-client.24.05.2026:latest
+
+      - name: Delete old container
+        run: docker rm -f reactjs-app-container
+
+      - name: Run Docker Container
+        run: docker run -d -p 3001:80 --name reactjs-app-container muhammadyusuf2766/gssiot-dashboard-client.24.05.2026
