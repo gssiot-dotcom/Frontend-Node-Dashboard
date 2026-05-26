@@ -42,17 +42,20 @@ export default function Pagination({
 	})()
 
 	return (
-		<div className='flex items-center justify-between gap-3 flex-wrap pt-4 mt-4 border-t border-border'>
-			<div className='flex items-center gap-4'>
-				<span className='text-sm text-muted-foreground'>
+		<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-4 border-t border-border'>
+			{/* Info + limit select */}
+			<div className='flex items-center gap-3 flex-wrap'>
+				<span className='text-xs sm:text-sm text-muted-foreground'>
 					<span className='font-medium text-foreground'>{page}</span>
 					{' / '}
 					<span className='font-medium text-foreground'>{totalPages}</span>
 					{' 페이지 · 총 '}
 					<span className='font-medium text-foreground'>{total}</span>건
 				</span>
-				<div className='flex items-center gap-2'>
-					<span className='text-sm text-muted-foreground'>페이지당</span>
+				<div className='flex items-center gap-1.5'>
+					<span className='text-xs sm:text-sm text-muted-foreground'>
+						페이지당
+					</span>
 					<Select
 						value={pagination.limit.toString()}
 						onValueChange={v => {
@@ -60,7 +63,7 @@ export default function Pagination({
 							onPageChange(1)
 						}}
 					>
-						<SelectTrigger className='h-8 w-16 text-xs'>
+						<SelectTrigger className='h-7 sm:h-8 w-14 sm:w-16 text-xs'>
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
@@ -74,11 +77,12 @@ export default function Pagination({
 				</div>
 			</div>
 
+			{/* Page buttons */}
 			<div className='flex items-center gap-1'>
 				<Button
 					variant='outline'
 					size='icon'
-					className='h-8 w-8'
+					className='h-7 w-7 sm:h-8 sm:w-8'
 					onClick={() => onPageChange(1)}
 					disabled={!hasPrevPage}
 				>
@@ -87,7 +91,7 @@ export default function Pagination({
 				<Button
 					variant='outline'
 					size='icon'
-					className='h-8 w-8'
+					className='h-7 w-7 sm:h-8 sm:w-8'
 					onClick={() => onPageChange(page - 1)}
 					disabled={!hasPrevPage}
 				>
@@ -99,7 +103,7 @@ export default function Pagination({
 						key={p}
 						variant={p === page ? 'default' : 'outline'}
 						size='icon'
-						className='h-8 w-8 text-xs'
+						className='h-7 w-7 sm:h-8 sm:w-8 text-xs'
 						onClick={() => onPageChange(p)}
 					>
 						{p}
@@ -109,7 +113,7 @@ export default function Pagination({
 				<Button
 					variant='outline'
 					size='icon'
-					className='h-8 w-8'
+					className='h-7 w-7 sm:h-8 sm:w-8'
 					onClick={() => onPageChange(page + 1)}
 					disabled={!hasNextPage}
 				>
@@ -118,7 +122,7 @@ export default function Pagination({
 				<Button
 					variant='outline'
 					size='icon'
-					className='h-8 w-8'
+					className='h-7 w-7 sm:h-8 sm:w-8'
 					onClick={() => onPageChange(totalPages)}
 					disabled={!hasNextPage}
 				>

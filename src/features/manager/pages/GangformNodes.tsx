@@ -307,6 +307,22 @@ export default function VerticalNodes() {
 					</div>
 				</div>
 
+				<div className='md:hidden mb-4'>
+					<AlarmLevelSettings
+						value={alarmLevels}
+						onChange={setAlarmLevels}
+						t={t}
+						isSaving={isAlarmLevelSaving}
+						onSave={levels => {
+							updateAlarmLevel({
+								buildingId,
+								alarmType: nodeType,
+								levels,
+							})
+						}}
+					/>
+				</div>
+
 				{/* Status filters */}
 				<div className='flex items-center gap-2 mb-4 overflow-x-auto pb-1'>
 					{STATUS_FILTERS.map(f => (
@@ -328,7 +344,7 @@ export default function VerticalNodes() {
 						</Button>
 					))}
 
-					<div className='ml-auto shrink-0'>
+					<div className='ml-auto shrink-0 max-sm:hidden'>
 						<AlarmLevelSettings
 							value={alarmLevels}
 							onChange={setAlarmLevels}

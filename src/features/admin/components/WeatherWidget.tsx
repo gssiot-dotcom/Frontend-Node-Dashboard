@@ -57,16 +57,21 @@ export function WeatherWidget() {
 	]
 
 	return (
-		<div className='bg-card/50 border border-border rounded-xl px-4 py-3'>
-			<p className='text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider'>
+		<div className='bg-card/50 border border-border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3'>
+			<p className='text-[10px] sm:text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider'>
 				현재 날씨
 			</p>
-			<div className='grid grid-cols-3 gap-x-5 gap-y-2'>
+			{/* Mobile: 2 columns, Desktop: 3 columns */}
+			<div className='grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5 sm:gap-x-5 sm:gap-y-2'>
 				{weatherItems.map((item, i) => (
-					<div key={i} className='flex items-center gap-1.5'>
-						<item.icon className={`h-4 w-4 shrink-0 ${item.color}`} />
-						<span className='text-xs text-muted-foreground'>{item.label}:</span>
-						<span className='text-xs font-medium text-foreground'>
+					<div key={i} className='flex items-center gap-1 sm:gap-1.5'>
+						<item.icon
+							className={`h-3 w-3 sm:h-4 sm:w-4 shrink-0 ${item.color}`}
+						/>
+						<span className='text-[10px] sm:text-xs text-muted-foreground'>
+							{item.label}:
+						</span>
+						<span className='text-[10px] sm:text-xs font-medium text-foreground'>
 							{item.value}
 						</span>
 					</div>

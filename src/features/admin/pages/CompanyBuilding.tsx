@@ -20,7 +20,7 @@ import angleImg from '@/public/pikechondo.png'
 import doorImg from '@/public/pikechondochuribmun.png'
 import { SelectGroup } from '@radix-ui/react-select'
 import { t } from 'i18next'
-import { Building2, Link2 } from 'lucide-react'
+import { Building2, Link2, MapPin } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import NodeTypeCard from '../../../components/NodeTypeCard'
@@ -90,13 +90,6 @@ export default function CompanyBuildingsPage() {
 	}
 
 	useEffect(() => {
-		if (selectedBuildingId) return
-
-		if (initialBuildingId) {
-			setSelectedBuildingId(initialBuildingId)
-			return
-		}
-
 		if (buildings.length > 0) {
 			setSelectedBuildingId(buildings[0]._id)
 		}
@@ -259,7 +252,7 @@ export default function CompanyBuildingsPage() {
 
 				{/* Scrollable Content */}
 				<ScrollArea className='flex-1'>
-					<div className='p-4 lg:p-6'>
+					<div className='p-3 sm:p-4 lg:p-6'>
 						<div className='max-w-4xl mx-auto'>
 							<AnimatePresence mode='wait'>
 								<motion.div
@@ -270,57 +263,38 @@ export default function CompanyBuildingsPage() {
 									transition={{ duration: 0.3 }}
 								>
 									{/* Header - Hidden on mobile since we have the top bar */}
-									<div className='mb-8 hidden md:flex md:items-start md:justify-between md:gap-6'>
-										{/* Left: Logo + Building info */}
+									<div className='mb-6 sm:mb-8 hidden md:flex md:items-start md:justify-between md:gap-6'>
 										<div className='flex items-start gap-4'>
-											{/* Company Logo */}
-											<div
-												onClick={() =>
-													openCarousel(
-														readyImageUrls.length ? readyImageUrls : [''],
-														`${selectedBuilding.title} — Ready View`,
-													)
-												}
-												className='w-40 h-20 rounded-xl border border-border bg-card flex items-center justify-center overflow-hidden shrink-0'
-											>
-												<img
-													src={readyImageUrls[0] || ''}
-													alt={`${selectedBuilding.title} ready image`}
-													className='w-full h-full object-cover'
-													onError={e => {
-														e.currentTarget.style.display = 'none'
-													}}
-												/>
-
-												{!readyImageUrls[0] && (
-													<Building2 className='h-10 w-10 text-muted-foreground' />
-												)}
+											{/* Building image placeholder */}
+											<div className='w-32 lg:w-40 h-16 lg:h-20 rounded-xl border border-border bg-card flex items-center justify-center overflow-hidden shrink-0'>
+												<Building2 className='h-8 w-8 lg:h-10 lg:w-10 text-muted-foreground' />
 											</div>
 
-											{/* Building name + location */}
 											<div>
 												<div className='flex items-center gap-2 text-muted-foreground text-sm mb-1'>
-													<Building2 className='h-4 w-4' />
-													<span>
-														{selectedBuilding.address || '위치 정보 없음'}
-													</span>
+													<MapPin className='h-4 w-4' />
+													<span>{selectedBuilding.address}</span>
 												</div>
-												<h1 className='text-2xl lg:text-3xl font-bold text-foreground'>
+												<h1 className='text-xl lg:text-2xl xl:text-3xl font-bold text-foreground'>
 													{selectedBuilding.title}
 												</h1>
 												<p className='text-sm text-muted-foreground mt-1'>
-													{t('dashboard.header.subtitle')}
+													실시간 건물 모니터링 대시보드
 												</p>
 											</div>
 										</div>
 
-										{/* Right: Weather grid */}
+										<WeatherWidget />
+									</div>
+
+									{/* Mobile Weather Widget */}
+									<div className='md:hidden mb-4'>
 										<WeatherWidget />
 									</div>
 
 									{/* Actions Section */}
 									<div className='bg-card border border-border rounded-xl p-4 mb-6'>
-										<div className='flex items-center justify-between'>
+										<div className='flex md:items-center justify-between max-sm:flex-col'>
 											<div>
 												<h2 className='font-semibold text-foreground'>
 													빠른 작업
@@ -329,7 +303,7 @@ export default function CompanyBuildingsPage() {
 													회사 관리 작업을 수행하세요
 												</p>
 											</div>
-											<div className='flex items-center gap-2'>
+											<div className='grid grid-cols-5 max-sm:grid-cols-2 gap-2'>
 												<BuildingImagesUploadDialog
 													companyId={companyId}
 													buildingId={selectedBuilding._id}
@@ -362,7 +336,7 @@ export default function CompanyBuildingsPage() {
 													type='button'
 													variant='default'
 													size='sm'
-													className='gap-2 shrink-0'
+													className='gap-2 shrink-0 max-sm:col-span-2'
 													onClick={() =>
 														navigate(`${selectedBuilding._id}/devices`, {
 															state: { companyId: companyId },
@@ -488,7 +462,6 @@ export default function CompanyBuildingsPage() {
 				</ScrollArea>
 			</main>
 			{/* Image Modal */}
-			//{' '}
 			<ImageCarouselDialog
 				isOpen={carouselModal.isOpen}
 				onClose={closeCarousel}
@@ -496,6 +469,61 @@ export default function CompanyBuildingsPage() {
 				title={carouselModal.title}
 				initialIndex={carouselModal.initialIndex}
 			/>
+		</div>
+	)
+}
+
+// Stats Bar - Responsive
+function StatsBar({
+	stats,
+}: {
+	stats: {
+		totalNodesCount: number
+		onlineNodesCount: number
+		totalGatewaysCounts: number
+		totalWorkersCount: number
+	}
+}) {
+	const statItems = [
+		{
+			label: 'Total Nodes',
+			value: stats.totalNodesCount,
+			accent: 'text-foreground',
+		},
+		{
+			label: 'Online',
+			value: stats.onlineNodesCount,
+			accent: 'text-green-500',
+		},
+		{
+			label: 'Gateways',
+			value: stats.totalGatewaysCounts,
+			accent: 'text-blue-500',
+		},
+		{
+			label: 'Workers',
+			value: stats.totalWorkersCount,
+			accent: 'text-amber-500',
+		},
+	]
+
+	return (
+		<div className='grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8'>
+			{statItems.map((stat, i) => (
+				<div
+					key={i}
+					className='bg-card/50 border border-border rounded-xl p-3 sm:p-4 text-center'
+				>
+					<p
+						className={`text-lg sm:text-xl lg:text-2xl font-bold ${stat.accent}`}
+					>
+						{stat.value}
+					</p>
+					<p className='text-[10px] sm:text-xs text-muted-foreground mt-0.5'>
+						{stat.label}
+					</p>
+				</div>
+			))}
 		</div>
 	)
 }

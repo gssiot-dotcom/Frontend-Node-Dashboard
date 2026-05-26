@@ -108,7 +108,6 @@ function DevicesTabsSection() {
 					<div className='rounded-xl border border-border glass p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>게이트웨이 목록</h3>
-
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
@@ -120,7 +119,68 @@ function DevicesTabsSection() {
 							</div>
 						</div>
 
-						<div className='overflow-x-auto'>
+						{/* Mobile */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{gateways.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									{gatewaysQuery.isLoading
+										? '불러오는 중...'
+										: '검색 결과가 없습니다.'}
+								</p>
+							) : (
+								gateways.map(gw => (
+									<div
+										key={gw._id}
+										className='flex items-start gap-3 p-3 border-b border-border last:border-b-0'
+									>
+										<div className='flex-1 min-w-0 space-y-1.5'>
+											<div className='flex items-center justify-between gap-2'>
+												<span className='font-mono font-medium text-sm'>
+													{gw.serialNumber}
+												</span>
+												{getAssignedBadge(!!gw.isAssigned)}
+											</div>
+
+											<div className='flex items-center gap-3 text-xs text-muted-foreground'>
+												<span>{getGatewayTypeLabel(gw.gatewayType)}</span>
+												<span
+													className={`inline-flex items-center gap-1 ${
+														gw.isOnline
+															? 'text-emerald-600 dark:text-emerald-400'
+															: ''
+													}`}
+												>
+													<span
+														className={`w-1.5 h-1.5 rounded-full ${gw.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
+													/>
+													{gw.isOnline ? '온라인' : '오프라인'}
+												</span>
+											</div>
+
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												{gw.companyName && <span>{gw.companyName}</span>}
+												{gw.buildingName && <span>{gw.buildingName}</span>}
+												{gw.installedLocation && (
+													<span>{gw.installedLocation}</span>
+												)}
+											</div>
+										</div>
+
+										<Button
+											variant='outline'
+											size='sm'
+											className='shrink-0'
+											onClick={() => openAssignedNodesDialog(gw)}
+										>
+											<Link2 className='w-3.5 h-3.5' />
+										</Button>
+									</div>
+								))
+							)}
+						</div>
+
+						{/* Desktop */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -134,51 +194,35 @@ function DevicesTabsSection() {
 										<TableHead>노드 할당</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{gateways.map(gw => (
 										<TableRow key={gw._id}>
 											<TableCell className='font-mono font-medium'>
 												{gw.serialNumber}
 											</TableCell>
-
 											<TableCell className='text-sm'>
 												{getGatewayTypeLabel(gw.gatewayType)}
 											</TableCell>
-
 											<TableCell>{getAssignedBadge(!!gw.isAssigned)}</TableCell>
-
 											<TableCell className='text-sm'>
 												{gw.companyName || '-'}
 											</TableCell>
-
 											<TableCell className='text-sm'>
 												{gw.buildingName || '-'}
 											</TableCell>
-
 											<TableCell>
 												<span
-													className={`inline-flex items-center gap-1 text-xs ${
-														gw.isOnline
-															? 'text-emerald-600 dark:text-emerald-400'
-															: 'text-muted-foreground'
-													}`}
+													className={`inline-flex items-center gap-1 text-xs ${gw.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}
 												>
 													<span
-														className={`w-1.5 h-1.5 rounded-full ${
-															gw.isOnline
-																? 'bg-emerald-500'
-																: 'bg-muted-foreground'
-														}`}
+														className={`w-1.5 h-1.5 rounded-full ${gw.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
 													/>
 													{gw.isOnline ? '온라인' : '오프라인'}
 												</span>
 											</TableCell>
-
 											<TableCell className='text-sm text-muted-foreground'>
 												{gw.installedLocation || '-'}
 											</TableCell>
-
 											<TableCell>
 												<Button
 													variant='outline'
@@ -192,7 +236,6 @@ function DevicesTabsSection() {
 											</TableCell>
 										</TableRow>
 									))}
-
 									{gateways.length === 0 && (
 										<TableRow>
 											<TableCell
@@ -216,7 +259,6 @@ function DevicesTabsSection() {
 					<div className='rounded-xl border border-border glass p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>노드 목록</h3>
-
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
@@ -228,7 +270,49 @@ function DevicesTabsSection() {
 							</div>
 						</div>
 
-						<div className='overflow-x-auto'>
+						{/* Mobile */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{nodes.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									{nodesQuery.isLoading
+										? '불러오는 중...'
+										: '검색 결과가 없습니다.'}
+								</p>
+							) : (
+								nodes.map(node => (
+									<div
+										key={node._id}
+										className='flex items-start gap-3 p-3 border-b border-border last:border-b-0'
+									>
+										<div className='flex-1 min-w-0 space-y-1.5'>
+											<div className='flex items-center justify-between gap-2'>
+												<span className='font-mono font-medium text-sm'>
+													{node.number}
+												</span>
+												{getStatusBadge(node.status)}
+											</div>
+
+											<div className='flex items-center gap-2 text-xs text-muted-foreground'>
+												<span>{getNodeTypeLabel(node.nodeType)}</span>
+												{getAssignedBadge(!!node.isAssigned)}
+											</div>
+
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												{node.gatewaySerialNumber && (
+													<span className='font-mono'>
+														{node.gatewaySerialNumber}
+													</span>
+												)}
+												{node.companyName && <span>{node.companyName}</span>}
+											</div>
+										</div>
+									</div>
+								))
+							)}
+						</div>
+
+						{/* Desktop */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -240,34 +324,27 @@ function DevicesTabsSection() {
 										<TableHead>회사명</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{nodes.map(node => (
 										<TableRow key={node._id}>
 											<TableCell className='font-mono font-medium'>
 												{node.number}
 											</TableCell>
-
 											<TableCell className='text-sm'>
 												{getNodeTypeLabel(node.nodeType)}
 											</TableCell>
-
 											<TableCell className='font-mono text-sm'>
 												{node.gatewaySerialNumber || '-'}
 											</TableCell>
-
 											<TableCell>{getStatusBadge(node.status)}</TableCell>
-
 											<TableCell>
 												{getAssignedBadge(!!node.isAssigned)}
 											</TableCell>
-
 											<TableCell className='text-sm'>
 												{node.companyName || '-'}
 											</TableCell>
 										</TableRow>
 									))}
-
 									{nodes.length === 0 && (
 										<TableRow>
 											<TableCell

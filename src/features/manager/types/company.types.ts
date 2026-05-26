@@ -1,3 +1,4 @@
+import { Building } from '@/features/admin/types/building.types'
 import { Company } from '@/features/admin/types/company.types'
 
 // features/manager/api/manager.types.ts
@@ -20,23 +21,23 @@ export interface ManagerDashboardData {
 	gatewaysList: Gateway[]
 }
 
-export interface Building {
-	_id: string
-	title: string
-	address: string
-	buildingType: string
-	companyId: string
-	buildingPlanImage?: string[]
-	buildingRealImage?: string[]
-	buildingStatus: string
-	startDate: string
-	createdAt: string
-	updatedAt: string
-	checked: boolean
-	assigned: boolean
-	isAssigned: boolean
-	statistics?: BuildingStatistics
-}
+// export interface Building {
+// 	_id: string
+// 	title: string
+// 	address: string
+// 	buildingType: string
+// 	companyId: string
+// 	buildingPlanImage?: string[]
+// 	buildingRealImage?: string[]
+// 	buildingStatus: string
+// 	startDate: string
+// 	createdAt: string
+// 	updatedAt: string
+// 	checked: boolean
+// 	assigned: boolean
+// 	isAssigned: boolean
+// 	statistics?: BuildingStatistics
+// }
 
 export interface BuildingStatistics {
 	totalNodesCount: number

@@ -1,19 +1,20 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import {
+	BuildingCardMobile,
+	BuildingRowDesktop,
+} from '@/components/CompanyBuildingsTable'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import {
 	Activity,
 	AlertTriangle,
 	Building2,
-	ChevronRight,
-	MapPin,
+	ExternalLink,
 	Users,
 	Wifi,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
 	AddBuildingDialog,
 	AssignManagerDialog,
@@ -21,7 +22,6 @@ import {
 import { CompanyDashboardHeader } from '../components/CompanyDashboardHeader'
 import { StatCard } from '../components/StatsCard'
 import { useManagerDashboard } from '../hooks/usemanagerCompany'
-import { Building } from '../types/company.types'
 
 export default function ManagerDashboard() {
 	const { data, isLoading, isError } = useManagerDashboard()
@@ -56,14 +56,6 @@ export default function ManagerDashboard() {
 		)
 	}
 
-	const operabilityRate =
-		companyStatistics.nodesCount > 0
-			? Math.round(
-					(companyStatistics.onlineNodesCount / companyStatistics.nodesCount) *
-						100,
-				)
-			: 0
-
 	return (
 		<div className='flex h-full overflow-hidden'>
 			<main className='flex-1 flex flex-col h-full overflow-hidden'>
@@ -80,7 +72,7 @@ export default function ManagerDashboard() {
 
 								{/* Actions Section */}
 								<div className='bg-card border border-border rounded-xl p-4 mb-6'>
-									<div className='flex items-center justify-between'>
+									<div className='flex md:items-center justify-between max-sm:flex-col max-sm:gap-y-2'>
 										<div>
 											<h2 className='font-semibold text-foreground'>
 												빠른 작업
@@ -167,10 +159,21 @@ export default function ManagerDashboard() {
 								</div>
 
 								{/* Company Buildings */}
-								<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4'>
-									회사 건물 ({buildings.length})
-								</h2>
-								<div className='bg-card border border-border rounded-xl overflow-hidden'>
+								<div className='flex items-center justify-between mb-4'>
+									<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider'>
+										회사 건물 ({buildings.length})
+									</h2>
+									<Link
+										to={`/manager/buildings`}
+										className='flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors'
+									>
+										<span>전체 보기</span>
+										<ExternalLink className='h-3 w-3' />
+									</Link>
+								</div>
+
+								{/* Desktop Table */}
+								<div className='hidden sm:block bg-card border border-border rounded-xl overflow-hidden'>
 									<table className='w-full text-sm'>
 										<thead>
 											<tr className='border-b border-border bg-muted/30'>
@@ -181,32 +184,33 @@ export default function ManagerDashboard() {
 													위치
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
+													유형
+												</th>
+												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
 													상태
 												</th>
-												<th className='px-4 py-3' />
 											</tr>
 										</thead>
 										<tbody>
-											{buildings.length === 0 ? (
-												<tr>
-													<td
-														colSpan={4}
-														className='px-4 py-8 text-center text-sm text-muted-foreground'
-													>
-														등록된 건물이 없습니다.
-													</td>
-												</tr>
-											) : (
-												buildings.map((building, idx) => (
-													<ManagerBuildingRow
-														key={building._id}
-														building={building}
-														isLast={idx === buildings.length - 1}
-													/>
-												))
-											)}
+											{buildings.map((building, idx) => (
+												<BuildingRowDesktop
+													key={building._id}
+													building={building}
+													isLast={idx === buildings.length - 1}
+												/>
+											))}
 										</tbody>
 									</table>
+								</div>
+
+								{/* Mobile Cards */}
+								<div className='sm:hidden bg-card border border-border rounded-xl overflow-hidden'>
+									{buildings.map(building => (
+										<BuildingCardMobile
+											key={building._id}
+											building={building}
+										/>
+									))}
 								</div>
 							</motion.div>
 						</div>
@@ -214,74 +218,5 @@ export default function ManagerDashboard() {
 				</ScrollArea>
 			</main>
 		</div>
-	)
-}
-
-const statusColors: Record<string, string> = {
-	active: 'bg-green-500/20 text-green-600',
-	inactive: 'bg-amber-500/20 text-amber-600',
-	paused: 'bg-muted text-muted-foreground',
-}
-
-const statusLabels: Record<string, string> = {
-	active: '운영중',
-	inactive: '비활성화',
-	paused: '일시중지',
-}
-
-function ManagerBuildingRow({
-	building,
-	isLast,
-}: {
-	building: Building
-	isLast: boolean
-}) {
-	const navigate = useNavigate()
-
-	return (
-		<tr
-			className={cn(
-				'hover:bg-muted/20 transition-colors',
-				!isLast && 'border-b border-border',
-			)}
-		>
-			{/* 건물명 */}
-			<td className='px-4 py-3 font-medium text-foreground'>
-				{building.title}
-			</td>
-
-			{/* 위치 */}
-			<td className='px-4 py-3'>
-				<div className='flex items-center gap-1 text-muted-foreground text-xs'>
-					<MapPin className='h-3 w-3' />
-					{building.address || '위치 정보 없음'}
-				</div>
-			</td>
-
-			{/* 상태 */}
-			<td className='px-4 py-3'>
-				<span
-					className={cn(
-						'text-xs px-2 py-0.5 rounded-full',
-						statusColors[building.buildingStatus] ?? statusColors.paused,
-					)}
-				>
-					{statusLabels[building.buildingStatus] ?? building.buildingStatus}
-				</span>
-			</td>
-
-			{/* 액션 */}
-			<td className='px-4 py-3'>
-				<Button
-					onClick={() => navigate(`/manager/buildings/${building._id}`)}
-					variant='ghost'
-					size='sm'
-					className='text-xs h-7'
-				>
-					관리
-					<ChevronRight className='h-3 w-3 ml-1' />
-				</Button>
-			</td>
-		</tr>
 	)
 }

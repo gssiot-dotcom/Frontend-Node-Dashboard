@@ -199,7 +199,7 @@ export function AssignWorkerDialog({
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger asChild>
-				<Button size='sm' className='gap-2'>
+				<Button size='sm' variant={'outline'} className='gap-2'>
 					<UserPlus className='h-4 w-4' />
 					작업자 배정
 				</Button>

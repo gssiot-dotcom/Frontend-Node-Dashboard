@@ -319,7 +319,7 @@ export default function BuildingsPage() {
 
 									{/* Actions Section */}
 									<div className='bg-card border border-border rounded-xl p-4 mb-6'>
-										<div className='flex items-center justify-between'>
+										<div className='flex md:items-center justify-between max-sm:flex-col'>
 											<div>
 												<h2 className='font-semibold text-foreground'>
 													빠른 작업
@@ -328,7 +328,7 @@ export default function BuildingsPage() {
 													회사 관리 작업을 수행하세요
 												</p>
 											</div>
-											<div className='flex items-center gap-2'>
+											<div className='grid grid-cols-5 max-sm:grid-cols-2 gap-2'>
 												<BuildingImagesUploadDialog
 													buildingId={selectedBuilding._id}
 													buildingName={selectedBuilding.title}
@@ -359,7 +359,7 @@ export default function BuildingsPage() {
 													type='button'
 													variant='default'
 													size='sm'
-													className='gap-2 shrink-0'
+													className='gap-2 shrink-0 max-sm:col-span-2'
 													onClick={() => navigate(`/manager/devices`)}
 												>
 													<Link2 className='h-4 w-4' />
@@ -481,7 +481,6 @@ export default function BuildingsPage() {
 				</ScrollArea>
 			</main>
 			{/* Image Modal */}
-			//{' '}
 			<ImageCarouselDialog
 				isOpen={carouselModal.isOpen}
 				onClose={closeCarousel}

@@ -87,20 +87,18 @@ export default function AlarmLevelSettings({
 	}
 
 	return (
-		<div className='flex items-end gap-5 rounded-xl border border-border/90 bg-muted/50 px-2 py-1.5'>
+		<div className='flex flex-wrap items-end gap-3 sm:gap-5 rounded-xl border border-border/90 bg-muted/50 px-2 py-1.5'>
 			{safeFilter && (
-				<label className='flex min-w-[76px] flex-col gap-1'>
+				<label className='flex min-w-[60px] sm:min-w-[76px] flex-col gap-0.5 sm:gap-1'>
 					<div className='flex items-center justify-center gap-1'>
 						<span
-							className={`h-2.5 w-2.5 rounded-[3px] ${safeFilter.colorClass}`}
+							className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-[2px] sm:rounded-[3px] ${safeFilter.colorClass}`}
 						/>
-
-						<span className='text-[10px] leading-none text-muted-foreground'>
+						<span className='text-[9px] sm:text-[10px] leading-none text-muted-foreground'>
 							{t(safeFilter.labelKey)}
 						</span>
 					</div>
-
-					<div className='flex h-7 items-center justify-center rounded-md border border-border bg-background/50 px-2 text-xs font-medium text-muted-foreground'>
+					<div className='flex h-6 sm:h-7 items-center justify-center rounded-md border border-border bg-background/50 px-1.5 sm:px-2 text-[11px] sm:text-xs font-medium text-muted-foreground'>
 						{value.caution || 0}° 이하
 					</div>
 				</label>
@@ -113,12 +111,13 @@ export default function AlarmLevelSettings({
 				return (
 					<label
 						key={f.value}
-						className='flex min-w-[66px] cursor-pointer flex-col gap-1'
+						className='flex min-w-[54px] sm:min-w-[66px] cursor-pointer flex-col gap-0.5 sm:gap-1'
 					>
 						<div className='flex items-center justify-center gap-1'>
-							<span className={`h-2.5 w-2.5 rounded-[3px] ${f.colorClass}`} />
-
-							<span className='text-[10px] leading-none text-muted-foreground'>
+							<span
+								className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-[2px] sm:rounded-[3px] ${f.colorClass}`}
+							/>
+							<span className='text-[9px] sm:text-[10px] leading-none text-muted-foreground'>
 								{t(f.labelKey)}
 							</span>
 						</div>
@@ -126,10 +125,9 @@ export default function AlarmLevelSettings({
 						<select
 							value={value[level]}
 							onChange={e => handleChange(level, Number(e.target.value))}
-							className='h-7 rounded-md border border-border bg-background/50 px-2 text-xs font-medium text-foreground outline-none hover:bg-muted/40'
+							className='h-6 sm:h-7 rounded-md border border-border bg-background/50 px-1.5 sm:px-2 text-[11px] sm:text-xs font-medium text-foreground outline-none hover:bg-muted/40'
 						>
 							<option value={0}>0°</option>
-
 							{options.map(option => (
 								<option key={option} value={option}>
 									{option}°
@@ -145,7 +143,7 @@ export default function AlarmLevelSettings({
 				size='sm'
 				disabled={isSaving}
 				onClick={() => onSave?.(value)}
-				className='h-7 px-3 text-xs'
+				className='h-6 sm:h-7 px-2 sm:px-3 text-[11px] sm:text-xs flex-1 sm:flex-none'
 			>
 				{isSaving ? 'Saving...' : 'Save'}
 			</Button>

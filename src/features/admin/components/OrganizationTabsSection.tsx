@@ -36,179 +36,6 @@ import type {
 	PaginationMeta,
 } from '../types/organization.types'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface Building {
-	_id: string
-	title: string
-	address: string
-	buildingType: string
-	buildingStatus: string
-	isAssigned: boolean
-	companyName?: string | null
-	gatewayCount?: number
-}
-
-interface Company {
-	_id: string
-	companyName: string
-	companyAddress: string
-	companyTel: string
-	companyEmail: string | null
-	companyStatus: string
-	buildingCount?: number
-}
-
-interface Gateway {
-	_id: string
-	serialNumber: string
-	gatewayType: string
-	gatewayStatus: string
-	isAssigned: boolean
-	buildingId: string | null
-	buildingName?: string | null
-	installedLocation: string
-}
-
-interface ListResponse<T> {
-	items: T[]
-	pagination: PaginationMeta
-}
-
-// ─── Fake Data Generators ─────────────────────────────────────────────────────
-
-const ALL_BUILDINGS: Building[] = Array.from({ length: 23 }, (_, i) => ({
-	_id: `building_${i + 1}`,
-	title: [
-		'Samsung Goyang A-동',
-		'LG 마포 타워',
-		'Hyundai 판교 캠퍼스',
-		'SK 종로 빌딩',
-		'KT 광화문 센터',
-	][i % 5],
-	address: [
-		'Goyang 덕양구',
-		'서울 마포구 상암동',
-		'성남시 분당구 판교',
-		'서울 종로구',
-		'서울 종로구 광화문',
-	][i % 5],
-	buildingType: i % 2 === 0 ? 'office' : 'commercial',
-	buildingStatus: i % 7 === 0 ? 'inactive' : 'active',
-	isAssigned: i % 3 !== 0,
-	companyName:
-		i % 3 !== 0
-			? ['Samsung', 'LG Electronics', 'Hyundai', 'SK Telecom'][i % 4]
-			: null,
-	gatewayCount: Math.floor(Math.random() * 8),
-}))
-
-const ALL_COMPANIES: Company[] = Array.from({ length: 15 }, (_, i) => ({
-	_id: `company_${i + 1}`,
-	companyName: [
-		'Samsung coltd',
-		'LG Electronics',
-		'Hyundai Motor',
-		'SK Telecom',
-		'KT Corp',
-		'Kakao',
-		'Naver',
-		'Lotte',
-		'Hanwha',
-		'Posco',
-	][i % 10],
-	companyAddress: [
-		'서울 강남구',
-		'서울 마포구',
-		'서울 서초구',
-		'성남시 분당구',
-		'인천광역시',
-	][i % 5],
-	companyTel: `02-${1000 + i * 111}-${2000 + i * 77}`,
-	companyEmail: i % 4 === 0 ? null : `contact${i + 1}@company.co.kr`,
-	companyStatus: i % 6 === 0 ? 'inactive' : 'active',
-	buildingCount: Math.floor(Math.random() * 5),
-}))
-
-const ALL_USERS: OrganizationUserListItem[] = Array.from(
-	{ length: 18 },
-	(_, i) => {
-		const assignedCompany =
-			i % 3 !== 0 ? ALL_COMPANIES[i % ALL_COMPANIES.length] : null
-
-		return {
-			_id: `user_${i + 1}`,
-			name: [
-				'김민준',
-				'이서준',
-				'박도윤',
-				'최지호',
-				'정하준',
-				'강서연',
-				'조하린',
-				'윤지우',
-			][i % 8],
-			email: `user${i + 1}@example.com`,
-			phone: `010-${String(1000 + i * 111).padStart(4, '0')}-${String(
-				2000 + i * 77,
-			).padStart(4, '0')}`,
-			userType: i % 2 === 0 ? 'Manager' : 'Worker',
-			userStatus: i % 5 === 0 ? 'inactive' : 'active',
-			isAssigned: Boolean(assignedCompany),
-			companyId: assignedCompany?._id ?? null,
-			companyName: assignedCompany?.companyName ?? null,
-		}
-	},
-)
-
-const ALL_GATEWAYS: Gateway[] = Array.from({ length: 31 }, (_, i) => ({
-	_id: `gateway_${i + 1}`,
-	serialNumber: String(i + 1).padStart(4, '0'),
-	gatewayType: i % 2 === 0 ? 'nodes_gateway' : 'security_office_gateway',
-	gatewayStatus: i % 5 === 0 ? 'online' : 'offline',
-	isAssigned: i % 3 !== 0,
-	buildingId: i % 3 !== 0 ? `building_${(i % 5) + 1}` : null,
-	buildingName:
-		i % 3 !== 0
-			? ['Samsung Goyang A-동', 'LG 마포 타워', 'Hyundai 판교 캠퍼스'][i % 3]
-			: null,
-	installedLocation: i % 4 === 0 ? '' : `B${(i % 3) + 1}F 복도`,
-}))
-
-// ─── Fake API (simulate network delay + pagination) ───────────────────────────
-
-function fakeFetch<T>(
-	allItems: T[],
-	page: number,
-	limit: number,
-	search: string,
-	filterFn: (item: T, q: string) => boolean,
-): Promise<ListResponse<T>> {
-	return new Promise(resolve => {
-		setTimeout(() => {
-			const filtered = search
-				? allItems.filter(item => filterFn(item, search.toLowerCase()))
-				: allItems
-			const total = filtered.length
-			const totalPages = Math.max(1, Math.ceil(total / limit))
-			const safePage = Math.min(page, totalPages)
-			const start = (safePage - 1) * limit
-			const items = filtered.slice(start, start + limit)
-			resolve({
-				items,
-				pagination: {
-					total,
-					page: safePage,
-					limit,
-					totalPages,
-					hasNextPage: safePage < totalPages,
-					hasPrevPage: safePage > 1,
-				},
-			})
-		}, 400)
-	})
-}
-
 // ─── Pagination Component ─────────────────────────────────────────────────────
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -491,7 +318,12 @@ function OrganizationTabsSection() {
 				</DialogContent>
 			</Dialog>
 		),
-		[assignedDialogOpen, assignedDialogTitle, assignedDialogItems],
+		[
+			assignedDialogOpen,
+			assignedDialogTitle,
+			assignedDialogItems,
+			assignedDialogLoading,
+		],
 	)
 
 	return (
@@ -508,7 +340,6 @@ function OrganizationTabsSection() {
 					<div className='rounded-xl border border-border bg-card p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>회사 목록</h3>
-
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
@@ -520,7 +351,56 @@ function OrganizationTabsSection() {
 							</div>
 						</div>
 
-						<div className='overflow-x-auto'>
+						{/* Mobile */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{companyLoading ? (
+								<div className='py-12 flex justify-center'>
+									<Loader2 className='w-5 h-5 animate-spin text-muted-foreground' />
+								</div>
+							) : companies.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									검색 결과가 없습니다.
+								</p>
+							) : (
+								companies.map(company => (
+									<div
+										key={company._id}
+										className='flex items-start gap-3 p-3 border-b border-border last:border-b-0'
+									>
+										<div className='flex-1 min-w-0 space-y-1.5'>
+											<div className='flex items-center justify-between gap-2'>
+												<span className='font-medium text-sm truncate'>
+													{company.companyName}
+												</span>
+												{getStatusBadge(company.companyStatus)}
+											</div>
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												{company.companyTel && (
+													<span className='font-mono'>
+														{company.companyTel}
+													</span>
+												)}
+												{company.companyEmail && (
+													<span>{company.companyEmail}</span>
+												)}
+												<span>{company.buildingCount ?? 0}개 건물</span>
+											</div>
+										</div>
+										<Button
+											variant='outline'
+											size='sm'
+											className='shrink-0'
+											onClick={() => openAssignedBuildingsDialog(company)}
+										>
+											<Link2 className='w-3.5 h-3.5' />
+										</Button>
+									</div>
+								))
+							)}
+						</div>
+
+						{/* Desktop */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -532,7 +412,6 @@ function OrganizationTabsSection() {
 										<TableHead>작업</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{companyLoading ? (
 										<LoadingOverlay colSpan={6} />
@@ -544,23 +423,18 @@ function OrganizationTabsSection() {
 												<TableCell className='font-medium'>
 													{company.companyName}
 												</TableCell>
-
 												<TableCell className='text-sm font-mono'>
 													{company.companyTel || '-'}
 												</TableCell>
-
 												<TableCell className='text-sm text-muted-foreground'>
 													{company.companyEmail || '-'}
 												</TableCell>
-
 												<TableCell className='text-sm'>
 													{company.buildingCount ?? 0}개
 												</TableCell>
-
 												<TableCell>
 													{getStatusBadge(company.companyStatus)}
 												</TableCell>
-
 												<TableCell>
 													<Button
 														variant='outline'
@@ -595,7 +469,6 @@ function OrganizationTabsSection() {
 					<div className='rounded-xl border border-border bg-card p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>건물 목록</h3>
-
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
@@ -607,7 +480,60 @@ function OrganizationTabsSection() {
 							</div>
 						</div>
 
-						<div className='overflow-x-auto'>
+						{/* Mobile */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{buildingLoading ? (
+								<div className='py-12 flex justify-center'>
+									<Loader2 className='w-5 h-5 animate-spin text-muted-foreground' />
+								</div>
+							) : buildings.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									검색 결과가 없습니다.
+								</p>
+							) : (
+								buildings.map(building => (
+									<div
+										key={building._id}
+										className='flex items-start gap-3 p-3 border-b border-border last:border-b-0'
+									>
+										<div className='flex-1 min-w-0 space-y-1.5'>
+											<div className='flex items-center justify-between gap-2'>
+												<span className='font-medium text-sm truncate'>
+													{building.title}
+												</span>
+												{getStatusBadge(building.buildingStatus)}
+											</div>
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												{building.address && (
+													<span className='truncate'>{building.address}</span>
+												)}
+											</div>
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												<span>
+													{building.companyName || (
+														<span className='text-muted-foreground'>
+															미할당
+														</span>
+													)}
+												</span>
+												<span>{building.gatewayCount ?? 0}개 게이트웨이</span>
+											</div>
+										</div>
+										<Button
+											variant='outline'
+											size='sm'
+											className='shrink-0'
+											onClick={() => openAssignedGatewaysDialog(building)}
+										>
+											<Link2 className='w-3.5 h-3.5' />
+										</Button>
+									</div>
+								))
+							)}
+						</div>
+
+						{/* Desktop */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -619,7 +545,6 @@ function OrganizationTabsSection() {
 										<TableHead>작업</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{buildingLoading ? (
 										<LoadingOverlay colSpan={6} />
@@ -631,11 +556,9 @@ function OrganizationTabsSection() {
 												<TableCell className='font-medium'>
 													{building.title}
 												</TableCell>
-
 												<TableCell className='text-sm text-muted-foreground'>
 													{building.address}
 												</TableCell>
-
 												<TableCell className='text-sm'>
 													{building.companyName || (
 														<span className='text-muted-foreground'>
@@ -643,15 +566,12 @@ function OrganizationTabsSection() {
 														</span>
 													)}
 												</TableCell>
-
 												<TableCell className='text-sm'>
 													{building.gatewayCount ?? 0}개
 												</TableCell>
-
 												<TableCell>
 													{getStatusBadge(building.buildingStatus)}
 												</TableCell>
-
 												<TableCell>
 													<Button
 														variant='outline'
@@ -686,7 +606,6 @@ function OrganizationTabsSection() {
 					<div className='rounded-xl border border-border bg-card p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>사용자 목록</h3>
-
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
@@ -698,7 +617,53 @@ function OrganizationTabsSection() {
 							</div>
 						</div>
 
-						<div className='overflow-x-auto'>
+						{/* Mobile */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{userLoading ? (
+								<div className='py-12 flex justify-center'>
+									<Loader2 className='w-5 h-5 animate-spin text-muted-foreground' />
+								</div>
+							) : users.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									검색 결과가 없습니다.
+								</p>
+							) : (
+								users.map(user => (
+									<div
+										key={user._id}
+										className='flex items-start gap-3 p-3 border-b border-border last:border-b-0'
+									>
+										<div className='flex-1 min-w-0 space-y-1.5'>
+											<div className='flex items-center justify-between gap-2'>
+												<span className='font-medium text-sm'>{user.name}</span>
+												{getStatusBadge(user.userStatus)}
+											</div>
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												<span className='truncate'>{user.email}</span>
+												{user.phone && (
+													<span className='font-mono'>{user.phone}</span>
+												)}
+											</div>
+											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+												<span>{user.userType}</span>
+												<span>{user.companyName || <span>미할당</span>}</span>
+											</div>
+										</div>
+										<Button
+											variant='outline'
+											size='sm'
+											className='shrink-0'
+											onClick={() => openAssignedCompaniesDialog(user)}
+										>
+											<Link2 className='w-3.5 h-3.5' />
+										</Button>
+									</div>
+								))
+							)}
+						</div>
+
+						{/* Desktop */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -711,7 +676,6 @@ function OrganizationTabsSection() {
 										<TableHead>작업</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{userLoading ? (
 										<LoadingOverlay colSpan={7} />
@@ -723,19 +687,15 @@ function OrganizationTabsSection() {
 												<TableCell className='font-medium'>
 													{user.name}
 												</TableCell>
-
 												<TableCell className='text-sm text-muted-foreground'>
 													{user.email}
 												</TableCell>
-
 												<TableCell className='text-sm font-mono'>
 													{user.phone}
 												</TableCell>
-
 												<TableCell className='text-sm'>
 													{user.userType}
 												</TableCell>
-
 												<TableCell className='text-sm'>
 													{user.companyName || (
 														<span className='text-muted-foreground'>
@@ -743,9 +703,7 @@ function OrganizationTabsSection() {
 														</span>
 													)}
 												</TableCell>
-
 												<TableCell>{getStatusBadge(user.userStatus)}</TableCell>
-
 												<TableCell>
 													<Button
 														variant='outline'

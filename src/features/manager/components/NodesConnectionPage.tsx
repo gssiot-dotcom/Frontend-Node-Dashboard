@@ -29,7 +29,7 @@ import {
 	useRegisterCompanyNodesToGatewayMutation,
 	useUnassignCompanyNodesMutation,
 } from '@/features/admin/hooks/useDevice'
-import { DeviceGateway } from '@/features/admin/types/device.types'
+import { DeviceGateway, DeviceNode } from '@/features/admin/types/device.types'
 import { GATEWAY_TYPES } from '@/features/admin/types/gateway.types'
 import { NODE_TYPES } from '@/features/admin/types/node.types'
 import { useMyCompany } from '@/features/manager/hooks/usemanagerCompany'
@@ -90,8 +90,102 @@ function getAssignedBadge(isAssigned: boolean) {
 		</span>
 	)
 }
-type LocationState = {
-	companyId: string
+
+// Helper components for mobile cards
+function MobileGatewayListCard({
+	gw,
+	onNodeAssign,
+}: {
+	gw: DeviceGateway
+	onNodeAssign: () => void
+}) {
+	return (
+		<div className='flex items-start gap-3 p-3 border-b border-border last:border-b-0 hover:bg-muted/30'>
+			<div className='flex-1 min-w-0 space-y-1.5'>
+				<div className='flex items-center justify-between gap-2'>
+					<span className='font-mono font-medium text-sm'>
+						{gw.serialNumber}
+					</span>
+					{getAssignedBadge(!!gw.isAssigned)}
+				</div>
+
+				<div className='flex items-center gap-3 text-xs text-muted-foreground'>
+					<span>{getGatewayTypeLabel(gw.gatewayType)}</span>
+					<span
+						className={`inline-flex items-center gap-1 ${
+							gw.isOnline
+								? 'text-emerald-600 dark:text-emerald-400'
+								: 'text-muted-foreground'
+						}`}
+					>
+						<span
+							className={`w-1.5 h-1.5 rounded-full ${gw.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
+						/>
+						{gw.isOnline ? '온라인' : '오프라인'}
+					</span>
+				</div>
+
+				<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+					{gw.companyName && <span>{gw.companyName}</span>}
+					{gw.buildingName && <span>{gw.buildingName}</span>}
+					{gw.installedLocation && <span>{gw.installedLocation}</span>}
+				</div>
+			</div>
+
+			<Button
+				variant='outline'
+				size='sm'
+				className='gap-1.5 shrink-0'
+				onClick={onNodeAssign}
+			>
+				<Link2 className='w-3.5 h-3.5' />
+				<span className='hidden sm:inline'>노드 할당</span>
+			</Button>
+		</div>
+	)
+}
+
+function MobileNodeListCard({
+	node,
+	isChecked,
+	onToggle,
+}: {
+	node: DeviceNode
+	isChecked: boolean
+	onToggle: () => void
+}) {
+	const isAssignable = !!node.gatewayId && !!node.gatewaySerialNumber
+
+	return (
+		<div
+			className={`flex items-start gap-3 p-3 border-b border-border last:border-b-0 hover:bg-muted/30 ${isChecked ? 'bg-muted/40' : ''}`}
+		>
+			<div className='pt-0.5'>
+				{isAssignable && (
+					<Checkbox checked={isChecked} onCheckedChange={onToggle} />
+				)}
+			</div>
+
+			<div className='flex-1 min-w-0 space-y-1.5'>
+				<div className='flex items-center justify-between gap-2'>
+					<span className='font-mono font-medium text-sm'>{node.number}</span>
+					{getStatusBadge(node.status)}
+				</div>
+
+				<div className='flex items-center gap-3 text-xs text-muted-foreground'>
+					<span>{getNodeTypeLabel(node.nodeType)}</span>
+					{getAssignedBadge(!!node.isAssigned)}
+				</div>
+
+				<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
+					{node.gatewaySerialNumber && (
+						<span className='font-mono'>{node.gatewaySerialNumber}</span>
+					)}
+					{node.companyName && <span>{node.companyName}</span>}
+				</div>
+			</div>
+		</div>
+	)
 }
 
 function NodesConnectionTabsSection() {
@@ -281,7 +375,6 @@ function NodesConnectionTabsSection() {
 					<div className='rounded-xl border border-border glass p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>게이트웨이 목록</h3>
-
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
@@ -293,7 +386,27 @@ function NodesConnectionTabsSection() {
 							</div>
 						</div>
 
-						<div className='overflow-x-auto'>
+						{/* Mobile: card list */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{gateways.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									{gatewaysQuery.isLoading
+										? '불러오는 중...'
+										: '검색 결과가 없습니다.'}
+								</p>
+							) : (
+								gateways.map(gw => (
+									<MobileGatewayListCard
+										key={gw._id}
+										gw={gw}
+										onNodeAssign={() => openAssignedNodesDialog(gw)}
+									/>
+								))
+							)}
+						</div>
+
+						{/* Desktop: table */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
@@ -307,51 +420,35 @@ function NodesConnectionTabsSection() {
 										<TableHead>노드 할당</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{gateways.map(gw => (
 										<TableRow key={gw._id}>
 											<TableCell className='font-mono font-medium'>
 												{gw.serialNumber}
 											</TableCell>
-
 											<TableCell className='text-sm'>
 												{getGatewayTypeLabel(gw.gatewayType)}
 											</TableCell>
-
 											<TableCell>{getAssignedBadge(!!gw.isAssigned)}</TableCell>
-
 											<TableCell className='text-sm'>
 												{gw.companyName || '-'}
 											</TableCell>
-
 											<TableCell className='text-sm'>
 												{gw.buildingName || '-'}
 											</TableCell>
-
 											<TableCell>
 												<span
-													className={`inline-flex items-center gap-1 text-xs ${
-														gw.isOnline
-															? 'text-emerald-600 dark:text-emerald-400'
-															: 'text-muted-foreground'
-													}`}
+													className={`inline-flex items-center gap-1 text-xs ${gw.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}
 												>
 													<span
-														className={`w-1.5 h-1.5 rounded-full ${
-															gw.isOnline
-																? 'bg-emerald-500'
-																: 'bg-muted-foreground'
-														}`}
+														className={`w-1.5 h-1.5 rounded-full ${gw.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
 													/>
 													{gw.isOnline ? '온라인' : '오프라인'}
 												</span>
 											</TableCell>
-
 											<TableCell className='text-sm text-muted-foreground'>
 												{gw.installedLocation || '-'}
 											</TableCell>
-
 											<TableCell>
 												<Button
 													variant='outline'
@@ -365,7 +462,6 @@ function NodesConnectionTabsSection() {
 											</TableCell>
 										</TableRow>
 									))}
-
 									{gateways.length === 0 && (
 										<TableRow>
 											<TableCell
@@ -389,7 +485,6 @@ function NodesConnectionTabsSection() {
 					<div className='rounded-xl border border-border glass p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
 							<h3 className='font-semibold text-foreground'>노드 목록</h3>
-
 							<div className='flex items-center gap-2 w-full sm:w-auto'>
 								{selectedNodeIds.size > 0 && (
 									<Button
@@ -421,11 +516,7 @@ function NodesConnectionTabsSection() {
 
 						{unassignResult && (
 							<div
-								className={`flex items-center gap-2 p-3 mb-3 rounded-lg text-sm ${
-									unassignResult.success
-										? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-										: 'bg-destructive/10 text-destructive'
-								}`}
+								className={`flex items-center gap-2 p-3 mb-3 rounded-lg text-sm ${unassignResult.success ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'}`}
 							>
 								{unassignResult.success ? (
 									<CheckCircle2 className='w-4 h-4' />
@@ -436,11 +527,32 @@ function NodesConnectionTabsSection() {
 							</div>
 						)}
 
-						<div className='overflow-x-auto'>
+						{/* Mobile: card list */}
+						<div className='sm:hidden border border-border rounded-lg overflow-hidden'>
+							{nodes.length === 0 ? (
+								<p className='text-center text-muted-foreground py-8 text-sm'>
+									{nodesQuery.isLoading
+										? '불러오는 중...'
+										: '검색 결과가 없습니다.'}
+								</p>
+							) : (
+								nodes.map(node => (
+									<MobileNodeListCard
+										key={node._id}
+										node={node}
+										isChecked={selectedNodeIds.has(node._id)}
+										onToggle={() => toggleNodeSelection(node._id)}
+									/>
+								))
+							)}
+						</div>
+
+						{/* Desktop: table */}
+						<div className='hidden sm:block overflow-x-auto'>
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead className='w-10' /> {/* checkbox column */}
+										<TableHead className='w-10' />
 										<TableHead className='w-20'>노드 번호</TableHead>
 										<TableHead>노드 타입</TableHead>
 										<TableHead>게이트웨이</TableHead>
@@ -449,13 +561,11 @@ function NodesConnectionTabsSection() {
 										<TableHead>회사명</TableHead>
 									</TableRow>
 								</TableHeader>
-
 								<TableBody>
 									{nodes.map(node => {
 										const isAssignable =
 											!!node.gatewayId && !!node.gatewaySerialNumber
 										const isChecked = selectedNodeIds.has(node._id)
-
 										return (
 											<TableRow
 												key={node._id}
@@ -490,7 +600,6 @@ function NodesConnectionTabsSection() {
 											</TableRow>
 										)
 									})}
-
 									{nodes.length === 0 && (
 										<TableRow>
 											<TableCell
