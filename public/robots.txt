@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /manager/
+Disallow: /worker/
+Disallow: /unauthorized
+Disallow: /test-error
+
+Sitemap: https://dashboard.infogssiot.com/sitemap.xml

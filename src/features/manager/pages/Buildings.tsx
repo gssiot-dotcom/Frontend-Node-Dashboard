@@ -206,8 +206,7 @@ export default function BuildingsPage() {
 						buildings={buildings.map(building => ({
 							id: building._id,
 							name: building.title,
-							location:
-								building.address || t('dashboard.fallbacks.noLocation'),
+							location: building.address || t('dashboard.fallbacks.noLocation'),
 							alerts: 0,
 							...building,
 						}))}
