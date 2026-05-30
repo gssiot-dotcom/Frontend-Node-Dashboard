@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, Briefcase, CheckCircle2, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useCreateAdminCompany } from '../hooks/useCompanies'
 
 const BUILDING_TYPES = [
@@ -19,6 +20,7 @@ function getErrorMessage(error: unknown) {
 }
 
 function OrganizationCreateCards() {
+	const { t } = useTranslation()
 	// const createBuildingMutation = useCreateAdminBuilding(null)
 	const createCompanyMutation = useCreateAdminCompany()
 
@@ -82,7 +84,9 @@ function OrganizationCreateCards() {
 
 			setCompanyResult({
 				success: true,
-				message: `회사가 생성되었습니다. (${companyName})`,
+				message: t('pages.organizationCreate.companyCreated', {
+					name: companyName,
+				}),
 			})
 
 			setCompanyName('')
@@ -194,19 +198,23 @@ function OrganizationCreateCards() {
 						<Briefcase className='w-5 h-5 text-primary' />
 					</div>
 					<div>
-						<h2 className='font-semibold text-foreground'>회사 생성</h2>
-						<p className='text-xs text-muted-foreground'>새로운 회사 등록</p>
+						<h2 className='font-semibold text-foreground'>
+							{t('pages.organizationCreate.companyTitle')}
+						</h2>
+						<p className='text-xs text-muted-foreground'>
+							{t('pages.organizationCreate.companyDescription')}
+						</p>
 					</div>
 				</div>
 
 				<div className='space-y-4'>
 					<div className='space-y-2'>
 						<Label htmlFor='company-name' className='text-sm font-medium'>
-							회사명
+							{t('pages.organizationCreate.companyName')}
 						</Label>
 						<Input
 							id='company-name'
-							placeholder='예: 테크놀로지 주식회사'
+							placeholder={t('pages.organizationCreate.companyPlaceholder')}
 							value={companyName}
 							onChange={e => {
 								setCompanyName(e.target.value)
@@ -217,11 +225,11 @@ function OrganizationCreateCards() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='company-address' className='text-sm font-medium'>
-							주소
+							{t('pages.organizationCreate.address')}
 						</Label>
 						<Input
 							id='company-address'
-							placeholder='예: 서울시 강남구 테헤란로 123'
+							placeholder={t('pages.organizationCreate.addressPlaceholder')}
 							value={companyAddress}
 							onChange={e => {
 								setCompanyAddress(e.target.value)
@@ -232,14 +240,14 @@ function OrganizationCreateCards() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='company-tel' className='text-sm font-medium'>
-							연락처{' '}
+							{t('pages.organizationCreate.contact')}{' '}
 							<span className='text-muted-foreground font-normal'>
-								(선택사항)
+								{t('pages.organizationCreate.optional')}
 							</span>
 						</Label>
 						<Input
 							id='company-tel'
-							placeholder='예: 02-1234-5678'
+							placeholder={t('pages.organizationCreate.contactPlaceholder')}
 							value={companyTel}
 							onChange={e => {
 								setCompanyTel(e.target.value)
@@ -271,7 +279,9 @@ function OrganizationCreateCards() {
 						className='w-full gap-2'
 					>
 						<Plus className='w-4 h-4' />
-						{companySubmitting ? '생성 중...' : '회사 생성'}
+						{companySubmitting
+							? t('pages.organizationCreate.creating')
+							: t('pages.organizationCreate.createCompany')}
 					</Button>
 				</div>
 			</div>

@@ -1,4 +1,5 @@
 import { ApiResponse } from '@/shared/api/types'
+import { InstalledLocation } from '../components/BuildingPlanLocationModal'
 import { GatewayStatus } from './companyAssignment.types'
 import { GatewayTypes } from './gateway.types'
 
@@ -41,7 +42,7 @@ export interface BaseBuildingNode {
 	status: NodeStatus
 	gatewayId: GatewayRef
 	installedLocation?: string
-	installLocationImg?: string | null
+	installLocationImg?: InstalledLocation
 	lastSeenAt: string | null
 	saveStatusLastChange: Date
 	saveStatus: boolean

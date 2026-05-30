@@ -242,7 +242,7 @@ export default function VerticalNodes() {
 	if (!buildingId) {
 		return (
 			<div className='p-6 text-sm text-muted-foreground'>
-				필수 정보가 없습니다. 건물 페이지에서 다시 진입해주세요.
+				{t('common.missingNodePageInfo')}
 			</div>
 		)
 	}
@@ -250,7 +250,7 @@ export default function VerticalNodes() {
 	if (isError) {
 		return (
 			<div className='p-6 text-sm text-destructive'>
-				노드 데이터를 불러오지 못했습니다.
+				{t('common.failedNodeData')}
 			</div>
 		)
 	}
@@ -274,23 +274,26 @@ export default function VerticalNodes() {
 								{connected ? (
 									<>
 										<span className='w-1.5 h-1.5 rounded-full bg-gss-safe animate-pulse' />
-										Live
+										{t('nodePages.live')}
 									</>
 								) : (
 									<>
 										<span className='w-1.5 h-1.5 rounded-full bg-gss-offline' />
-										Disconnected
+										{t('nodePages.disconnected')}
 									</>
 								)}
 							</div>
 						</div>
 
 						<p className='text-sm text-muted-foreground mt-0.5'>
-							{filtered.length} of {nodesWithUi.length} nodes
+							{t('nodePages.countSummary', {
+								shown: filtered.length,
+								total: nodesWithUi.length,
+							})}
 						</p>
 
 						<p className='text-xs text-muted-foreground mt-0.5'>
-							Gateways: {gatewayList.length}
+							{t('nodePages.gatewaysSummary', { count: gatewayList.length })}
 						</p>
 					</div>
 
@@ -372,7 +375,7 @@ export default function VerticalNodes() {
 					<div className='text-center py-16'>
 						<Activity className='w-10 h-10 text-muted-foreground/30 mx-auto mb-3' />
 						<p className='text-sm text-muted-foreground'>
-							No nodes match your filter
+							{t('common.noNodesMatch')}
 						</p>
 					</div>
 				) : (

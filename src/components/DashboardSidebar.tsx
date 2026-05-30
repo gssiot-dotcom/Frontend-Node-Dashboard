@@ -25,10 +25,10 @@ const NAV_ITEMS = [
 		icon: LayoutDashboard,
 		path: '/admin/dashboard',
 	},
-	{ labelKey: 'Device create', icon: Gamepad2, path: '/admin/devices' },
-	{ labelKey: 'Organizations', icon: Gamepad2, path: '/admin/organizations' },
+	{ labelKey: 'nav.deviceCreate', icon: Gamepad2, path: '/admin/devices' },
+	{ labelKey: 'nav.organizations', icon: Gamepad2, path: '/admin/organizations' },
 	{
-		labelKey: 'Company Assigning',
+		labelKey: 'nav.companyAssigning',
 		icon: Activity,
 		path: '/admin/company/assigning',
 	},

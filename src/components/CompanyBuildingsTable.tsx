@@ -1,18 +1,13 @@
 import { Building } from '@/features/admin/types/building.types'
 import { cn } from '@/lib/utils'
 import { Building2, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const statusColors = {
 	active: 'bg-green-500/20 text-green-600',
 	inactive: 'bg-amber-500/20 text-amber-600',
 	paused: 'bg-muted text-muted-foreground',
 }
-const statusLabels = {
-	active: '운영중',
-	inactive: '비활성화',
-	paused: '일시중지',
-}
-
 export function BuildingRowDesktop({
 	building,
 	isLast,
@@ -20,6 +15,8 @@ export function BuildingRowDesktop({
 	building: Building
 	isLast: boolean
 }) {
+	const { t } = useTranslation()
+
 	return (
 		<tr
 			className={cn(
@@ -34,7 +31,7 @@ export function BuildingRowDesktop({
 				<div className='flex items-center gap-1 text-muted-foreground text-xs'>
 					<MapPin className='h-3 w-3 shrink-0' />
 					<span className='truncate'>
-						{building.address || '위치 정보 없음'}
+						{building.address || t('dashboard.fallbacks.noLocation')}
 					</span>
 				</div>
 			</td>
@@ -50,7 +47,7 @@ export function BuildingRowDesktop({
 						statusColors[building.buildingStatus],
 					)}
 				>
-					{statusLabels[building.buildingStatus]}
+					{t(`common.status.${building.buildingStatus}`)}
 				</span>
 			</td>
 		</tr>
@@ -59,6 +56,8 @@ export function BuildingRowDesktop({
 
 // Building Card Component for Mobile
 export function BuildingCardMobile({ building }: { building: Building }) {
+	const { t } = useTranslation()
+
 	return (
 		<div className='p-4 border-b border-border last:border-b-0'>
 			<div className='flex items-start justify-between gap-3 mb-2'>
@@ -71,14 +70,14 @@ export function BuildingCardMobile({ building }: { building: Building }) {
 						statusColors[building.buildingStatus],
 					)}
 				>
-					{statusLabels[building.buildingStatus]}
+					{t(`common.status.${building.buildingStatus}`)}
 				</span>
 			</div>
 			<div className='space-y-1.5'>
 				<div className='flex items-center gap-1.5 text-muted-foreground text-xs'>
 					<MapPin className='h-3 w-3 shrink-0' />
 					<span className='truncate'>
-						{building.address || '위치 정보 없음'}
+						{building.address || t('dashboard.fallbacks.noLocation')}
 					</span>
 				</div>
 				<div className='flex items-center gap-1.5 text-muted-foreground text-xs'>

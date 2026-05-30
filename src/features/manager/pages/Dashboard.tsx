@@ -14,6 +14,7 @@ import {
 	Users,
 	Wifi,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
 	AddBuildingDialog,
@@ -24,6 +25,7 @@ import { StatCard } from '../components/StatsCard'
 import { useManagerDashboard } from '../hooks/usemanagerCompany'
 
 export default function ManagerDashboard() {
+	const { t } = useTranslation()
 	const { data, isLoading, isError } = useManagerDashboard()
 
 	const company = data?.company
@@ -33,7 +35,9 @@ export default function ManagerDashboard() {
 	if (isLoading) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>Loading dashboard...</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.loadingDashboard')}
+				</p>
 			</div>
 		)
 	}
@@ -42,7 +46,7 @@ export default function ManagerDashboard() {
 		return (
 			<div className='flex h-full items-center justify-center'>
 				<p className='text-sm text-destructive'>
-					Failed to load dashboard data
+					{t('common.failedDashboard')}
 				</p>
 			</div>
 		)
@@ -51,7 +55,9 @@ export default function ManagerDashboard() {
 	if (!company || !companyStatistics) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>No company data found</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.noCompanyData')}
+				</p>
 			</div>
 		)
 	}
@@ -75,10 +81,10 @@ export default function ManagerDashboard() {
 									<div className='flex md:items-center justify-between max-sm:flex-col max-sm:gap-y-2'>
 										<div>
 											<h2 className='font-semibold text-foreground'>
-												빠른 작업
+												{t('dashboard.quickActions.title')}
 											</h2>
 											<p className='text-xs text-muted-foreground mt-0.5'>
-												회사 관리 작업을 수행하세요
+												{t('dashboard.quickActions.description')}
 											</p>
 										</div>
 										<div className='flex items-center gap-2'>
@@ -96,29 +102,29 @@ export default function ManagerDashboard() {
 
 								{/* Company Statistics */}
 								<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4'>
-									회사 통계
+									{t('dashboard.sections.companyStatistics')}
 								</h2>
 								<div className='grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8'>
 									<StatCard
-										label='전체 건물'
+										label={t('dashboard.stats.totalBuildings')}
 										value={companyStatistics.buildingsCount}
 										icon={Building2}
 										accent='bg-primary/10 text-primary'
 									/>
 									<StatCard
-										label='관리자'
+										label={t('dashboard.stats.managers')}
 										value={companyStatistics.managersCount}
 										icon={Users}
 										accent='bg-blue-500/10 text-blue-500'
 									/>
 									<StatCard
-										label='작업자'
+										label={t('dashboard.stats.workers')}
 										value={companyStatistics.workersCount}
 										icon={Users}
 										accent='bg-emerald-500/10 text-emerald-500'
 									/>
 									<StatCard
-										label='게이트웨이'
+										label={t('dashboard.stats.gateways')}
 										value={companyStatistics.gatewaysCount}
 										icon={Wifi}
 										accent='bg-amber-500/10 text-amber-500'
@@ -134,7 +140,9 @@ export default function ManagerDashboard() {
 										<p className='text-xl lg:text-2xl font-bold text-foreground'>
 											{companyStatistics.nodesCount}
 										</p>
-										<p className='text-xs text-muted-foreground'>전체 노드</p>
+										<p className='text-xs text-muted-foreground'>
+											{t('dashboard.stats.totalNodes')}
+										</p>
 									</div>
 
 									<div className='bg-card/50 border border-border rounded-xl p-4 text-center'>
@@ -144,7 +152,9 @@ export default function ManagerDashboard() {
 										<p className='text-xl lg:text-2xl font-bold text-green-500'>
 											{companyStatistics.onlineNodesCount}
 										</p>
-										<p className='text-xs text-muted-foreground'>온라인</p>
+										<p className='text-xs text-muted-foreground'>
+											{t('dashboard.stats.online')}
+										</p>
 									</div>
 
 									<div className='bg-card/50 border border-border rounded-xl p-4 text-center'>
@@ -154,20 +164,22 @@ export default function ManagerDashboard() {
 										<p className='text-xl lg:text-2xl font-bold text-amber-500'>
 											{companyStatistics.warningNodesCount}
 										</p>
-										<p className='text-xs text-muted-foreground'>경고 노드</p>
+										<p className='text-xs text-muted-foreground'>
+											{t('dashboard.stats.warningNodes')}
+										</p>
 									</div>
 								</div>
 
 								{/* Company Buildings */}
 								<div className='flex items-center justify-between mb-4'>
 									<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider'>
-										회사 건물 ({buildings.length})
+										{t('dashboard.sections.companyBuildings')} ({buildings.length})
 									</h2>
 									<Link
 										to={`/manager/buildings`}
 										className='flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors'
 									>
-										<span>전체 보기</span>
+										<span>{t('dashboard.sections.viewAll')}</span>
 										<ExternalLink className='h-3 w-3' />
 									</Link>
 								</div>
@@ -178,16 +190,16 @@ export default function ManagerDashboard() {
 										<thead>
 											<tr className='border-b border-border bg-muted/30'>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													건물명
+													{t('dashboard.table.buildingName')}
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													위치
+													{t('dashboard.table.location')}
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													유형
+													{t('dashboard.table.type')}
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													상태
+													{t('dashboard.table.status')}
 												</th>
 											</tr>
 										</thead>

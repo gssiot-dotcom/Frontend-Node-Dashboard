@@ -17,9 +17,9 @@ import gangformImg from '@/public/gangform.png'
 import angleImg from '@/public/pikechondo.png'
 import doorImg from '@/public/pikechondochuribmun.png'
 import { SelectGroup } from '@radix-ui/react-select'
-import { t } from 'i18next'
 import { Building2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { BuildingsList } from '@/features/admin/components/BuildingsList'
@@ -55,6 +55,7 @@ const NODE_TYPES = [
 ]
 
 export default function WorkerBuildingsPage() {
+	const { t } = useTranslation()
 	const location = useLocation()
 	const navigate = useNavigate()
 
@@ -155,7 +156,9 @@ export default function WorkerBuildingsPage() {
 	if (isLoading) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>Loading buildings...</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.loadingBuildings')}
+				</p>
 			</div>
 		)
 	}
@@ -164,7 +167,7 @@ export default function WorkerBuildingsPage() {
 		return (
 			<div className='flex h-full items-center justify-center'>
 				<p className='text-sm text-destructive'>
-					Failed to load buildings data
+					{t('common.failedBuildings')}
 				</p>
 			</div>
 		)
@@ -173,7 +176,9 @@ export default function WorkerBuildingsPage() {
 	if (!selectedBuilding) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>No building data found</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.noBuildingData')}
+				</p>
 			</div>
 		)
 	}
@@ -195,7 +200,8 @@ export default function WorkerBuildingsPage() {
 						buildings={buildings.map(building => ({
 							id: building._id,
 							name: building.title,
-							location: building.address || '위치 정보 없음',
+							location:
+								building.address || t('dashboard.fallbacks.noLocation'),
 							alerts: 0,
 							...building,
 						}))}
@@ -295,7 +301,8 @@ export default function WorkerBuildingsPage() {
 												<div className='flex items-center gap-2 text-muted-foreground text-sm mb-1'>
 													<Building2 className='h-4 w-4' />
 													<span>
-														{selectedBuilding.address || '위치 정보 없음'}
+														{selectedBuilding.address ||
+															t('dashboard.fallbacks.noLocation')}
 													</span>
 												</div>
 												<h1 className='text-2xl lg:text-3xl font-bold text-foreground'>
@@ -316,10 +323,10 @@ export default function WorkerBuildingsPage() {
 										<div className='flex items-center justify-between'>
 											<div>
 												<h2 className='font-semibold text-foreground'>
-													빠른 작업
+													{t('dashboard.quickActions.title')}
 												</h2>
 												<p className='text-xs text-muted-foreground mt-0.5'>
-													회사 관리 작업을 수행하세요
+													{t('dashboard.quickActions.description')}
 												</p>
 											</div>
 											{/* <div className='flex items-center gap-2'>
@@ -357,7 +364,7 @@ export default function WorkerBuildingsPage() {
 													onClick={() => navigate(`/manager/devices`)}
 												>
 													<Link2 className='h-4 w-4' />
-													노드 등록
+													{t('pages.devices.title')}
 												</Button>
 											</div> */}
 										</div>

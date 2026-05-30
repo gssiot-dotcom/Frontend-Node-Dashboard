@@ -1,9 +1,12 @@
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { ArrowLeft, LogIn, ShieldOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 export default function UnauthorizedPage() {
+	const { t } = useTranslation()
+
 	return (
 		<div className='min-h-screen bg-background flex items-center justify-center p-4'>
 			{/* Background subtle pattern */}
@@ -39,7 +42,7 @@ export default function UnauthorizedPage() {
 						transition={{ delay: 0.3 }}
 						className='text-xs sm:text-sm font-mono text-gss-danger font-semibold tracking-wider mb-2'
 					>
-						ERROR 401
+						{t('pages.unauthorized.code')}
 					</motion.p>
 
 					{/* Title */}
@@ -49,7 +52,7 @@ export default function UnauthorizedPage() {
 						transition={{ delay: 0.35 }}
 						className='text-xl sm:text-2xl font-bold text-foreground mb-2'
 					>
-						접근 권한 없음
+						{t('pages.unauthorized.title')}
 					</motion.h1>
 
 					{/* Subtitle */}
@@ -59,9 +62,9 @@ export default function UnauthorizedPage() {
 						transition={{ delay: 0.4 }}
 						className='text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8'
 					>
-						이 페이지에 접근할 권한이 없습니다.
+						{t('pages.unauthorized.descriptionLine1')}
 						<br />
-						로그인하거나 관리자에게 문의하세요.
+						{t('pages.unauthorized.descriptionLine2')}
 					</motion.p>
 
 					{/* Actions */}
@@ -74,7 +77,7 @@ export default function UnauthorizedPage() {
 						<Button asChild variant='outline' className='gap-2 text-sm'>
 							<Link to='/'>
 								<ArrowLeft className='w-4 h-4' />
-								홈으로 돌아가기
+								{t('common.backHome')}
 							</Link>
 						</Button>
 						<Button
@@ -83,7 +86,7 @@ export default function UnauthorizedPage() {
 						>
 							<Link to='/login'>
 								<LogIn className='w-4 h-4' />
-								로그인
+								{t('common.signin')}
 							</Link>
 						</Button>
 					</motion.div>
@@ -96,7 +99,7 @@ export default function UnauthorizedPage() {
 					transition={{ delay: 0.6 }}
 					className='text-center text-xs text-muted-foreground mt-4'
 				>
-					문제가 지속되면 시스템 관리자에게 문의하세요.
+					{t('pages.unauthorized.footer')}
 				</motion.p>
 			</motion.div>
 		</div>

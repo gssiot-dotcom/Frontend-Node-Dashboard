@@ -27,6 +27,7 @@ import {
 	Wifi,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CompaniesList } from '../components/CompaniesList'
 import { CompanyDashboardHeader } from '../components/CompanyDashboardHeader'
@@ -34,6 +35,7 @@ import { StatCard } from '../components/StatsCard'
 import { useAdminDashboardQuery } from '../hooks/userDashboard'
 
 export default function AdminDashboard() {
+	const { t } = useTranslation()
 	const [search, setSearch] = useState('')
 	const [page, setPage] = useState(1)
 	const limit = 20
@@ -67,7 +69,9 @@ export default function AdminDashboard() {
 	if (isLoading) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>Loading dashboard...</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.loadingDashboard')}
+				</p>
 			</div>
 		)
 	}
@@ -76,7 +80,7 @@ export default function AdminDashboard() {
 		return (
 			<div className='flex h-full items-center justify-center'>
 				<p className='text-sm text-destructive'>
-					Failed to load dashboard data
+					{t('common.failedDashboard')}
 				</p>
 			</div>
 		)
@@ -85,7 +89,9 @@ export default function AdminDashboard() {
 	if (!selectedCompanyDashboard || !selectedCompany || !companyStatistics) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>No company data found</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.noCompanyData')}
+				</p>
 			</div>
 		)
 	}
@@ -102,9 +108,11 @@ export default function AdminDashboard() {
 			{/* Companies Sidebar - Desktop */}
 			<aside className='w-72 h-[90vh] border-r border-border bg-card/30 flex-col hidden md:flex'>
 				<div className='p-4 border-b border-border shrink-0'>
-					<h2 className='font-semibold text-foreground'>회사 목록</h2>
+					<h2 className='font-semibold text-foreground'>
+						{t('dashboard.companiesScrollbar.title')}
+					</h2>
 					<p className='text-xs text-muted-foreground mt-0.5'>
-						관리 중인 회사를 선택하세요
+						{t('dashboard.companiesScrollbar.subtitle')}
 					</p>
 				</div>
 				<ScrollArea className='flex-1 h-3/4 overflow-visible'>
@@ -121,7 +129,7 @@ export default function AdminDashboard() {
 				{/* Mobile Company Selector */}
 				<div className='md:hidden p-4 border-b border-border shrink-0'>
 					<label className='text-xs text-muted-foreground mb-1.5 block'>
-						회사 선택
+						{t('dashboard.companiesScrollbar.mobileAction')}
 					</label>
 					<Select
 						value={selectedCompanyId}
@@ -183,10 +191,10 @@ export default function AdminDashboard() {
 									<div className='flex md:items-center justify-between max-sm:flex-col max-sm:gap-y-2'>
 										<div>
 											<h2 className='font-semibold text-foreground'>
-												빠른 작업
+												{t('dashboard.quickActions.title')}
 											</h2>
 											<p className='text-xs text-muted-foreground mt-0.5'>
-												회사 관리 작업을 수행하세요
+												{t('dashboard.quickActions.description')}
 											</p>
 										</div>
 										<div className='flex items-center gap-2'>
@@ -204,29 +212,29 @@ export default function AdminDashboard() {
 
 								{/* Company Statistics */}
 								<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4'>
-									회사 통계
+									{t('dashboard.sections.companyStatistics')}
 								</h2>
 								<div className='grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8'>
 									<StatCard
-										label='전체 건물'
+										label={t('dashboard.stats.totalBuildings')}
 										value={companyStatistics.buildingsCount}
 										icon={Building2}
 										accent='bg-primary/10 text-primary'
 									/>
 									<StatCard
-										label='관리자'
+										label={t('dashboard.stats.managers')}
 										value={companyStatistics.managersCount}
 										icon={Users}
 										accent='bg-blue-500/10 text-blue-500'
 									/>
 									<StatCard
-										label='작업자'
+										label={t('dashboard.stats.workers')}
 										value={companyStatistics.workersCount}
 										icon={Users}
 										accent='bg-emerald-500/10 text-emerald-500'
 									/>
 									<StatCard
-										label='게이트웨이'
+										label={t('dashboard.stats.gateways')}
 										value={companyStatistics.gatewaysCount}
 										icon={Wifi}
 										accent='bg-amber-500/10 text-amber-500'
@@ -235,7 +243,7 @@ export default function AdminDashboard() {
 
 								{/* Node Statistics */}
 								<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4'>
-									노드 통계
+									{t('dashboard.sections.nodeStatistics')}
 								</h2>
 								<div className='grid grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8'>
 									<div className='bg-card/50 border border-border rounded-xl p-3 sm:p-4 text-center'>
@@ -246,7 +254,7 @@ export default function AdminDashboard() {
 											{companyStatistics.nodesCount}
 										</p>
 										<p className='text-[10px] sm:text-xs text-muted-foreground'>
-											전체 노드
+											{t('dashboard.stats.totalNodes')}
 										</p>
 									</div>
 									<div className='bg-card/50 border border-border rounded-xl p-3 sm:p-4 text-center'>
@@ -257,7 +265,7 @@ export default function AdminDashboard() {
 											{companyStatistics.onlineNodesCount}
 										</p>
 										<p className='text-[10px] sm:text-xs text-muted-foreground'>
-											온라인
+											{t('dashboard.stats.online')}
 										</p>
 									</div>
 									<div className='bg-card/50 border border-border rounded-xl p-3 sm:p-4 text-center'>
@@ -268,7 +276,7 @@ export default function AdminDashboard() {
 											{companyStatistics.warningNodesCount}
 										</p>
 										<p className='text-[10px] sm:text-xs text-muted-foreground'>
-											Warning
+											{t('dashboard.stats.warningNodes')}
 										</p>
 									</div>
 								</div>
@@ -276,13 +284,13 @@ export default function AdminDashboard() {
 								{/* Company Buildings */}
 								<div className='flex items-center justify-between mb-4'>
 									<h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider'>
-										회사 건물 ({buildings.length})
+										{t('dashboard.sections.companyBuildings')} ({buildings.length})
 									</h2>
 									<Link
 										to={`/admin/companies/${selectedCompany._id}/buildings`}
 										className='flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors'
 									>
-										<span>전체 보기</span>
+										<span>{t('dashboard.sections.viewAll')}</span>
 										<ExternalLink className='h-3 w-3' />
 									</Link>
 								</div>
@@ -293,16 +301,16 @@ export default function AdminDashboard() {
 										<thead>
 											<tr className='border-b border-border bg-muted/30'>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													건물명
+													{t('dashboard.table.buildingName')}
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													위치
+													{t('dashboard.table.location')}
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													유형
+													{t('dashboard.table.type')}
 												</th>
 												<th className='text-left text-xs font-medium text-muted-foreground px-4 py-3'>
-													상태
+													{t('dashboard.table.status')}
 												</th>
 											</tr>
 										</thead>

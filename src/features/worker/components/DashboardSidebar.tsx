@@ -91,7 +91,7 @@ export default function DashboardSidebar() {
 			<div className='w-full h-24 p-3 border-t border-border'>
 				<img
 					src={logoUrl}
-					alt={'Company logo'}
+					alt={t('common.companyLogo')}
 					className='w-full h-full object-cover'
 				/>
 			</div>

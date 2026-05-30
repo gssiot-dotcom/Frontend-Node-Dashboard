@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Link2, Loader2, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Pagination from './Pagination'
 
 import {
@@ -40,7 +41,7 @@ import type {
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string, t: any) => {
 	switch (status) {
 		case 'active':
 		case 'online':
@@ -49,14 +50,18 @@ const getStatusBadge = (status: string) => {
 					variant='outline'
 					className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
 				>
-					{status === 'online' ? '온라인' : '활성'}
+					{status === 'online'
+						? t('common.status.online')
+						: t('common.status.active')}
 				</Badge>
 			)
 		case 'inactive':
 		case 'offline':
 			return (
 				<Badge variant='outline' className='bg-muted text-muted-foreground'>
-					{status === 'offline' ? '오프라인' : '비활성'}
+					{status === 'offline'
+						? t('common.status.offline')
+						: t('common.status.inactive')}
 				</Badge>
 			)
 		default:
@@ -87,6 +92,7 @@ type AssignedDialogType =
 	| 'user-companies'
 
 function OrganizationTabsSection() {
+	const { t } = useTranslation()
 	const [activeTab, setActiveTab] = useState('companies')
 
 	const [companyPage, setCompanyPage] = useState(1)
@@ -162,7 +168,11 @@ function OrganizationTabsSection() {
 	}
 
 	const openAssignedBuildingsDialog = (company: OrganizationCompany) => {
-		setAssignedDialogTitle(`${company.companyName} - 할당된 건물`)
+		setAssignedDialogTitle(
+			t('pages.organizationTables.assignedBuildingsTitle', {
+				name: company.companyName,
+			}),
+		)
 		setAssignedDialogType('company-buildings')
 		setSelectedCompanyId(company._id)
 		setSelectedBuildingId(undefined)
@@ -171,7 +181,11 @@ function OrganizationTabsSection() {
 	}
 
 	const openAssignedGatewaysDialog = (building: OrganizationBuilding) => {
-		setAssignedDialogTitle(`${building.title} - 할당된 게이트웨이`)
+		setAssignedDialogTitle(
+			t('pages.organizationTables.assignedGatewaysTitle', {
+				name: building.title,
+			}),
+		)
 		setAssignedDialogType('building-gateways')
 		setSelectedBuildingId(building._id)
 		setSelectedCompanyId(undefined)
@@ -180,7 +194,11 @@ function OrganizationTabsSection() {
 	}
 
 	const openAssignedCompaniesDialog = (user: OrganizationUserListItem) => {
-		setAssignedDialogTitle(`${user.name} - 할당된 회사`)
+		setAssignedDialogTitle(
+			t('pages.organizationTables.assignedCompaniesTitle', {
+				name: user.name,
+			}),
+		)
 		setAssignedDialogType('user-companies')
 		setSelectedUserId(user._id)
 		setSelectedCompanyId(undefined)
@@ -210,7 +228,9 @@ function OrganizationTabsSection() {
 				title: gateway.serialNumber,
 				subtitle:
 					gateway.gatewayType === 'nodes_gateway' ? 'Nodes' : 'Security Office',
-				meta: gateway.installedLocation || '설치 위치 없음',
+				meta:
+					gateway.installedLocation ||
+					t('pages.organizationTables.noInstallLocation'),
 				status: gateway.gatewayStatus,
 			}))
 		}
@@ -254,7 +274,7 @@ function OrganizationTabsSection() {
 				colSpan={colSpan}
 				className='text-center text-muted-foreground py-8'
 			>
-				검색 결과가 없습니다.
+				{t('pages.devices.table.noResults')}
 			</TableCell>
 		</TableRow>
 	)
@@ -303,14 +323,14 @@ function OrganizationTabsSection() {
 
 										{item.status && (
 											<div className='shrink-0'>
-												{getStatusBadge(item.status)}
+												{getStatusBadge(item.status, t)}
 											</div>
 										)}
 									</div>
 								))
 							) : (
 								<div className='p-6 text-center text-sm text-muted-foreground'>
-									할당된 항목이 없습니다.
+									{t('pages.organizationTables.noAssignedItems')}
 								</div>
 							)}
 						</div>
@@ -330,20 +350,28 @@ function OrganizationTabsSection() {
 		<>
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
 				<TabsList className='grid w-full grid-cols-3 max-w-lg'>
-					<TabsTrigger value='companies'>회사 목록</TabsTrigger>
-					<TabsTrigger value='buildings'>건물 목록</TabsTrigger>
-					<TabsTrigger value='users'>사용자 목록</TabsTrigger>
+					<TabsTrigger value='companies'>
+						{t('pages.organizationTables.companyList')}
+					</TabsTrigger>
+					<TabsTrigger value='buildings'>
+						{t('pages.organizationTables.buildingList')}
+					</TabsTrigger>
+					<TabsTrigger value='users'>
+						{t('pages.organizationTables.userList')}
+					</TabsTrigger>
 				</TabsList>
 
 				{/* Companies List */}
 				<TabsContent value='companies' className='mt-6'>
 					<div className='rounded-xl border border-border bg-card p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-							<h3 className='font-semibold text-foreground'>회사 목록</h3>
+							<h3 className='font-semibold text-foreground'>
+								{t('pages.organizationTables.companyList')}
+							</h3>
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
-									placeholder='검색...'
+									placeholder={t('common.searchPlaceholder')}
 									value={companySearch}
 									onChange={e => handleCompanySearch(e.target.value)}
 									className='pl-9'
@@ -359,7 +387,7 @@ function OrganizationTabsSection() {
 								</div>
 							) : companies.length === 0 ? (
 								<p className='text-center text-muted-foreground py-8 text-sm'>
-									검색 결과가 없습니다.
+									{t('pages.devices.table.noResults')}
 								</p>
 							) : (
 								companies.map(company => (
@@ -372,7 +400,7 @@ function OrganizationTabsSection() {
 												<span className='font-medium text-sm truncate'>
 													{company.companyName}
 												</span>
-												{getStatusBadge(company.companyStatus)}
+												{getStatusBadge(company.companyStatus, t)}
 											</div>
 											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
 												{company.companyTel && (
@@ -383,7 +411,11 @@ function OrganizationTabsSection() {
 												{company.companyEmail && (
 													<span>{company.companyEmail}</span>
 												)}
-												<span>{company.buildingCount ?? 0}개 건물</span>
+												<span>
+													{t('pages.organizationTables.buildingUnit', {
+														count: company.buildingCount ?? 0,
+													})}
+												</span>
 											</div>
 										</div>
 										<Button
@@ -404,12 +436,12 @@ function OrganizationTabsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>회사명</TableHead>
-										<TableHead>연락처</TableHead>
-										<TableHead>이메일</TableHead>
-										<TableHead>건물 수</TableHead>
-										<TableHead>상태</TableHead>
-										<TableHead>작업</TableHead>
+										<TableHead>{t('pages.organizationTables.companyName')}</TableHead>
+										<TableHead>{t('pages.organizationTables.contact')}</TableHead>
+										<TableHead>{t('pages.organizationTables.email')}</TableHead>
+										<TableHead>{t('pages.organizationTables.buildingCount')}</TableHead>
+										<TableHead>{t('dashboard.table.status')}</TableHead>
+										<TableHead>{t('pages.organizationTables.actions')}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -430,10 +462,12 @@ function OrganizationTabsSection() {
 													{company.companyEmail || '-'}
 												</TableCell>
 												<TableCell className='text-sm'>
-													{company.buildingCount ?? 0}개
+													{t('pages.organizationTables.buildingCountShort', {
+														count: company.buildingCount ?? 0,
+													})}
 												</TableCell>
 												<TableCell>
-													{getStatusBadge(company.companyStatus)}
+													{getStatusBadge(company.companyStatus, t)}
 												</TableCell>
 												<TableCell>
 													<Button
@@ -443,7 +477,7 @@ function OrganizationTabsSection() {
 														onClick={() => openAssignedBuildingsDialog(company)}
 													>
 														<Link2 className='w-3.5 h-3.5' />
-														건물 할당
+														{t('pages.organizationTables.assignBuildings')}
 													</Button>
 												</TableCell>
 											</TableRow>
@@ -468,11 +502,13 @@ function OrganizationTabsSection() {
 				<TabsContent value='buildings' className='mt-6'>
 					<div className='rounded-xl border border-border bg-card p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-							<h3 className='font-semibold text-foreground'>건물 목록</h3>
+							<h3 className='font-semibold text-foreground'>
+								{t('pages.organizationTables.buildingList')}
+							</h3>
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
-									placeholder='검색...'
+									placeholder={t('common.searchPlaceholder')}
 									value={buildingSearch}
 									onChange={e => handleBuildingSearch(e.target.value)}
 									className='pl-9'
@@ -488,7 +524,7 @@ function OrganizationTabsSection() {
 								</div>
 							) : buildings.length === 0 ? (
 								<p className='text-center text-muted-foreground py-8 text-sm'>
-									검색 결과가 없습니다.
+									{t('pages.devices.table.noResults')}
 								</p>
 							) : (
 								buildings.map(building => (
@@ -501,7 +537,7 @@ function OrganizationTabsSection() {
 												<span className='font-medium text-sm truncate'>
 													{building.title}
 												</span>
-												{getStatusBadge(building.buildingStatus)}
+												{getStatusBadge(building.buildingStatus, t)}
 											</div>
 											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
 												{building.address && (
@@ -512,11 +548,15 @@ function OrganizationTabsSection() {
 												<span>
 													{building.companyName || (
 														<span className='text-muted-foreground'>
-															미할당
+															{t('pages.organizationTables.unassigned')}
 														</span>
 													)}
 												</span>
-												<span>{building.gatewayCount ?? 0}개 게이트웨이</span>
+												<span>
+													{t('pages.organizationTables.gatewayUnit', {
+														count: building.gatewayCount ?? 0,
+													})}
+												</span>
 											</div>
 										</div>
 										<Button
@@ -537,12 +577,12 @@ function OrganizationTabsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>건물명</TableHead>
-										<TableHead>주소</TableHead>
-										<TableHead>소속 회사</TableHead>
-										<TableHead>게이트웨이 수</TableHead>
-										<TableHead>상태</TableHead>
-										<TableHead>작업</TableHead>
+										<TableHead>{t('dashboard.table.buildingName')}</TableHead>
+										<TableHead>{t('pages.organizationTables.address')}</TableHead>
+										<TableHead>{t('pages.organizationTables.company')}</TableHead>
+										<TableHead>{t('pages.organizationTables.gatewayCount')}</TableHead>
+										<TableHead>{t('dashboard.table.status')}</TableHead>
+										<TableHead>{t('pages.organizationTables.actions')}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -562,15 +602,17 @@ function OrganizationTabsSection() {
 												<TableCell className='text-sm'>
 													{building.companyName || (
 														<span className='text-muted-foreground'>
-															미할당
+															{t('pages.organizationTables.unassigned')}
 														</span>
 													)}
 												</TableCell>
 												<TableCell className='text-sm'>
-													{building.gatewayCount ?? 0}개
+													{t('pages.organizationTables.gatewayCountShort', {
+														count: building.gatewayCount ?? 0,
+													})}
 												</TableCell>
 												<TableCell>
-													{getStatusBadge(building.buildingStatus)}
+													{getStatusBadge(building.buildingStatus, t)}
 												</TableCell>
 												<TableCell>
 													<Button
@@ -580,7 +622,7 @@ function OrganizationTabsSection() {
 														onClick={() => openAssignedGatewaysDialog(building)}
 													>
 														<Link2 className='w-3.5 h-3.5' />
-														게이트웨이 할당
+														{t('pages.organizationTables.assignGateways')}
 													</Button>
 												</TableCell>
 											</TableRow>
@@ -605,11 +647,13 @@ function OrganizationTabsSection() {
 				<TabsContent value='users' className='mt-6'>
 					<div className='rounded-xl border border-border bg-card p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-							<h3 className='font-semibold text-foreground'>사용자 목록</h3>
+							<h3 className='font-semibold text-foreground'>
+								{t('pages.organizationTables.userList')}
+							</h3>
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
-									placeholder='검색...'
+									placeholder={t('common.searchPlaceholder')}
 									value={userSearch}
 									onChange={e => handleUserSearch(e.target.value)}
 									className='pl-9'
@@ -625,7 +669,7 @@ function OrganizationTabsSection() {
 								</div>
 							) : users.length === 0 ? (
 								<p className='text-center text-muted-foreground py-8 text-sm'>
-									검색 결과가 없습니다.
+									{t('pages.devices.table.noResults')}
 								</p>
 							) : (
 								users.map(user => (
@@ -636,7 +680,7 @@ function OrganizationTabsSection() {
 										<div className='flex-1 min-w-0 space-y-1.5'>
 											<div className='flex items-center justify-between gap-2'>
 												<span className='font-medium text-sm'>{user.name}</span>
-												{getStatusBadge(user.userStatus)}
+												{getStatusBadge(user.userStatus, t)}
 											</div>
 											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
 												<span className='truncate'>{user.email}</span>
@@ -646,7 +690,11 @@ function OrganizationTabsSection() {
 											</div>
 											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
 												<span>{user.userType}</span>
-												<span>{user.companyName || <span>미할당</span>}</span>
+												<span>
+													{user.companyName || (
+														<span>{t('pages.organizationTables.unassigned')}</span>
+													)}
+												</span>
 											</div>
 										</div>
 										<Button
@@ -667,13 +715,13 @@ function OrganizationTabsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>이름</TableHead>
-										<TableHead>이메일</TableHead>
-										<TableHead>연락처</TableHead>
-										<TableHead>유형</TableHead>
-										<TableHead>소속 회사</TableHead>
-										<TableHead>상태</TableHead>
-										<TableHead>작업</TableHead>
+										<TableHead>{t('pages.organizationTables.name')}</TableHead>
+										<TableHead>{t('pages.organizationTables.email')}</TableHead>
+										<TableHead>{t('pages.organizationTables.contact')}</TableHead>
+										<TableHead>{t('pages.organizationTables.type')}</TableHead>
+										<TableHead>{t('pages.organizationTables.company')}</TableHead>
+										<TableHead>{t('dashboard.table.status')}</TableHead>
+										<TableHead>{t('pages.organizationTables.actions')}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -699,11 +747,11 @@ function OrganizationTabsSection() {
 												<TableCell className='text-sm'>
 													{user.companyName || (
 														<span className='text-muted-foreground'>
-															미할당
+															{t('pages.organizationTables.unassigned')}
 														</span>
 													)}
 												</TableCell>
-												<TableCell>{getStatusBadge(user.userStatus)}</TableCell>
+												<TableCell>{getStatusBadge(user.userStatus, t)}</TableCell>
 												<TableCell>
 													<Button
 														variant='outline'
@@ -712,7 +760,7 @@ function OrganizationTabsSection() {
 														onClick={() => openAssignedCompaniesDialog(user)}
 													>
 														<Link2 className='w-3.5 h-3.5' />
-														회사 할당
+														{t('pages.organizationTables.assignCompany')}
 													</Button>
 												</TableCell>
 											</TableRow>

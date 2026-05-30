@@ -15,6 +15,7 @@ import { GATEWAY_TYPES } from '@/features/admin/types/gateway.types'
 import { NODE_TYPES } from '@/features/admin/types/node.types'
 import { Link2, Search } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
 	useDeviceGatewaysQuery,
 	useDeviceNodesQuery,
@@ -30,7 +31,7 @@ function getGatewayTypeLabel(type: string) {
 	return GATEWAY_TYPES.find(t => t.value === type)?.label || type
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, t: any) {
 	const styles: Record<string, string> = {
 		active:
 			'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
@@ -39,22 +40,16 @@ function getStatusBadge(status: string) {
 			'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
 		unassigned: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
 	}
-	const labels: Record<string, string> = {
-		active: '활성',
-		inactive: '비활성',
-		warning: '경고',
-		unassigned: '미배정',
-	}
 	return (
 		<span
 			className={`px-2 py-0.5 rounded-md text-xs font-medium border ${styles[status] || styles.inactive}`}
 		>
-			{labels[status] || status}
+			{t(`common.status.${status}`, status)}
 		</span>
 	)
 }
 
-function getAssignedBadge(isAssigned: boolean) {
+function getAssignedBadge(isAssigned: boolean, t: any) {
 	return (
 		<span
 			className={`px-2 py-0.5 rounded-md text-xs font-medium border ${
@@ -63,12 +58,13 @@ function getAssignedBadge(isAssigned: boolean) {
 					: 'bg-muted text-muted-foreground border-border'
 			}`}
 		>
-			{isAssigned ? '활성' : '비활성'}
+			{isAssigned ? t('common.status.active') : t('common.status.inactive')}
 		</span>
 	)
 }
 
 function DevicesTabsSection() {
+	const { t } = useTranslation()
 	const [activeTab, setActiveTab] = useState('gateways')
 
 	const [assignedNodesDialogOpen, setAssignedNodesDialogOpen] = useState(false)
@@ -99,19 +95,25 @@ function DevicesTabsSection() {
 		<>
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
 				<TabsList className='grid w-full grid-cols-2 max-w-md'>
-					<TabsTrigger value='gateways'>게이트웨이 목록</TabsTrigger>
-					<TabsTrigger value='nodes'>노드 목록</TabsTrigger>
+					<TabsTrigger value='gateways'>
+						{t('pages.devices.table.gatewayList')}
+					</TabsTrigger>
+					<TabsTrigger value='nodes'>
+						{t('pages.devices.table.nodeList')}
+					</TabsTrigger>
 				</TabsList>
 
 				{/* Gateways Table Tab */}
 				<TabsContent value='gateways' className='mt-6'>
 					<div className='rounded-xl border border-border glass p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-							<h3 className='font-semibold text-foreground'>게이트웨이 목록</h3>
+							<h3 className='font-semibold text-foreground'>
+								{t('pages.devices.table.gatewayList')}
+							</h3>
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
-									placeholder='검색...'
+									placeholder={t('common.searchPlaceholder')}
 									value={gatewaySearch}
 									onChange={e => setGatewaySearch(e.target.value)}
 									className='pl-9'
@@ -124,8 +126,8 @@ function DevicesTabsSection() {
 							{gateways.length === 0 ? (
 								<p className='text-center text-muted-foreground py-8 text-sm'>
 									{gatewaysQuery.isLoading
-										? '불러오는 중...'
-										: '검색 결과가 없습니다.'}
+										? t('pages.devices.table.loading')
+										: t('pages.devices.table.noResults')}
 								</p>
 							) : (
 								gateways.map(gw => (
@@ -138,7 +140,7 @@ function DevicesTabsSection() {
 												<span className='font-mono font-medium text-sm'>
 													{gw.serialNumber}
 												</span>
-												{getAssignedBadge(!!gw.isAssigned)}
+												{getAssignedBadge(!!gw.isAssigned, t)}
 											</div>
 
 											<div className='flex items-center gap-3 text-xs text-muted-foreground'>
@@ -153,7 +155,9 @@ function DevicesTabsSection() {
 													<span
 														className={`w-1.5 h-1.5 rounded-full ${gw.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
 													/>
-													{gw.isOnline ? '온라인' : '오프라인'}
+													{gw.isOnline
+														? t('common.status.online')
+														: t('common.status.offline')}
 												</span>
 											</div>
 
@@ -184,14 +188,14 @@ function DevicesTabsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>게이트웨이 번호</TableHead>
-										<TableHead>타입</TableHead>
-										<TableHead>배정 여부</TableHead>
-										<TableHead>회사명</TableHead>
-										<TableHead>건물명</TableHead>
-										<TableHead>연결</TableHead>
-										<TableHead>구역</TableHead>
-										<TableHead>노드 할당</TableHead>
+										<TableHead>{t('pages.devices.table.gatewayNumber')}</TableHead>
+										<TableHead>{t('dashboard.table.type')}</TableHead>
+										<TableHead>{t('pages.devices.table.assigned')}</TableHead>
+										<TableHead>{t('pages.devices.table.companyName')}</TableHead>
+										<TableHead>{t('pages.devices.table.buildingName')}</TableHead>
+										<TableHead>{t('pages.devices.table.connection')}</TableHead>
+										<TableHead>{t('pages.devices.table.zone')}</TableHead>
+										<TableHead>{t('pages.devices.table.nodeAssignment')}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -203,7 +207,7 @@ function DevicesTabsSection() {
 											<TableCell className='text-sm'>
 												{getGatewayTypeLabel(gw.gatewayType)}
 											</TableCell>
-											<TableCell>{getAssignedBadge(!!gw.isAssigned)}</TableCell>
+											<TableCell>{getAssignedBadge(!!gw.isAssigned, t)}</TableCell>
 											<TableCell className='text-sm'>
 												{gw.companyName || '-'}
 											</TableCell>
@@ -217,7 +221,9 @@ function DevicesTabsSection() {
 													<span
 														className={`w-1.5 h-1.5 rounded-full ${gw.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
 													/>
-													{gw.isOnline ? '온라인' : '오프라인'}
+													{gw.isOnline
+														? t('common.status.online')
+														: t('common.status.offline')}
 												</span>
 											</TableCell>
 											<TableCell className='text-sm text-muted-foreground'>
@@ -231,7 +237,7 @@ function DevicesTabsSection() {
 													onClick={() => openAssignedNodesDialog(gw)}
 												>
 													<Link2 className='w-3.5 h-3.5' />
-													노드 할당
+													{t('pages.devices.table.nodeAssignment')}
 												</Button>
 											</TableCell>
 										</TableRow>
@@ -243,8 +249,8 @@ function DevicesTabsSection() {
 												className='text-center text-muted-foreground py-8'
 											>
 												{gatewaysQuery.isLoading
-													? '불러오는 중...'
-													: '검색 결과가 없습니다.'}
+													? t('pages.devices.table.loading')
+													: t('pages.devices.table.noResults')}
 											</TableCell>
 										</TableRow>
 									)}
@@ -258,11 +264,13 @@ function DevicesTabsSection() {
 				<TabsContent value='nodes' className='mt-6'>
 					<div className='rounded-xl border border-border glass p-5 sm:p-6'>
 						<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-							<h3 className='font-semibold text-foreground'>노드 목록</h3>
+							<h3 className='font-semibold text-foreground'>
+								{t('pages.devices.table.nodeList')}
+							</h3>
 							<div className='relative w-full sm:w-64'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
-									placeholder='검색...'
+									placeholder={t('common.searchPlaceholder')}
 									value={nodeSearch}
 									onChange={e => setNodeSearch(e.target.value)}
 									className='pl-9'
@@ -275,8 +283,8 @@ function DevicesTabsSection() {
 							{nodes.length === 0 ? (
 								<p className='text-center text-muted-foreground py-8 text-sm'>
 									{nodesQuery.isLoading
-										? '불러오는 중...'
-										: '검색 결과가 없습니다.'}
+										? t('pages.devices.table.loading')
+										: t('pages.devices.table.noResults')}
 								</p>
 							) : (
 								nodes.map(node => (
@@ -289,12 +297,12 @@ function DevicesTabsSection() {
 												<span className='font-mono font-medium text-sm'>
 													{node.number}
 												</span>
-												{getStatusBadge(node.status)}
+												{getStatusBadge(node.status, t)}
 											</div>
 
 											<div className='flex items-center gap-2 text-xs text-muted-foreground'>
 												<span>{getNodeTypeLabel(node.nodeType)}</span>
-												{getAssignedBadge(!!node.isAssigned)}
+												{getAssignedBadge(!!node.isAssigned, t)}
 											</div>
 
 											<div className='flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground'>
@@ -316,12 +324,14 @@ function DevicesTabsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead className='w-20'>노드 번호</TableHead>
-										<TableHead>노드 타입</TableHead>
-										<TableHead>게이트웨이</TableHead>
-										<TableHead>상태</TableHead>
-										<TableHead>배정 여부</TableHead>
-										<TableHead>회사명</TableHead>
+										<TableHead className='w-20'>
+											{t('pages.devices.table.nodeNumber')}
+										</TableHead>
+										<TableHead>{t('pages.devices.table.nodeType')}</TableHead>
+										<TableHead>{t('pages.devices.table.gateway')}</TableHead>
+										<TableHead>{t('dashboard.table.status')}</TableHead>
+										<TableHead>{t('pages.devices.table.assigned')}</TableHead>
+										<TableHead>{t('pages.devices.table.companyName')}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -336,9 +346,9 @@ function DevicesTabsSection() {
 											<TableCell className='font-mono text-sm'>
 												{node.gatewaySerialNumber || '-'}
 											</TableCell>
-											<TableCell>{getStatusBadge(node.status)}</TableCell>
+											<TableCell>{getStatusBadge(node.status, t)}</TableCell>
 											<TableCell>
-												{getAssignedBadge(!!node.isAssigned)}
+												{getAssignedBadge(!!node.isAssigned, t)}
 											</TableCell>
 											<TableCell className='text-sm'>
 												{node.companyName || '-'}
@@ -352,8 +362,8 @@ function DevicesTabsSection() {
 												className='text-center text-muted-foreground py-8'
 											>
 												{nodesQuery.isLoading
-													? '불러오는 중...'
-													: '검색 결과가 없습니다.'}
+													? t('pages.devices.table.loading')
+													: t('pages.devices.table.noResults')}
 											</TableCell>
 										</TableRow>
 									)}
@@ -375,7 +385,8 @@ function DevicesTabsSection() {
 				<DialogContent className='sm:max-w-md'>
 					<AlertDialogHeader>
 						<DialogTitle>
-							{selectedGatewayForNodes?.serialNumber} - 할당된 노드
+							{selectedGatewayForNodes?.serialNumber} -{' '}
+							{t('pages.devices.table.assignedNodes')}
 						</DialogTitle>
 					</AlertDialogHeader>
 
@@ -393,7 +404,9 @@ function DevicesTabsSection() {
 
 										<div className='flex-1 min-w-0'>
 											<p className='text-sm font-medium text-foreground'>
-												노드 {node.number}
+												{t('pages.devices.table.node', {
+													number: node.number,
+												})}
 											</p>
 
 											<p className='text-xs text-muted-foreground truncate'>
@@ -406,15 +419,15 @@ function DevicesTabsSection() {
 										</div>
 
 										<div className='shrink-0'>
-											{getStatusBadge(node.status)}
+											{getStatusBadge(node.status, t)}
 										</div>
 									</div>
 								))
 							) : (
 								<div className='p-6 text-center text-sm text-muted-foreground'>
 									{assignedNodesQuery.isLoading
-										? '불러오는 중...'
-										: '할당된 노드가 없습니다.'}
+										? t('pages.devices.table.loading')
+										: t('pages.devices.table.noAssignedNodes')}
 								</div>
 							)}
 						</div>

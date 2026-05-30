@@ -3,9 +3,11 @@
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { ArrowLeft, FileQuestion, Home } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 export default function PageNotFound() {
+	const { t } = useTranslation()
 	const navigate = useNavigate()
 
 	return (
@@ -36,12 +38,12 @@ export default function PageNotFound() {
 
 					{/* Title */}
 					<h2 className='text-xl sm:text-2xl font-semibold text-foreground mb-2'>
-						페이지를 찾을 수 없습니다
+						{t('pages.notFound.title')}
 					</h2>
 
 					{/* Description */}
 					<p className='text-sm text-muted-foreground mb-8'>
-						요청하신 페이지가 존재하지 않거나 이동되었습니다.
+						{t('pages.notFound.description')}
 					</p>
 
 					{/* Actions */}
@@ -52,12 +54,12 @@ export default function PageNotFound() {
 							className='w-full sm:w-auto gap-2'
 						>
 							<ArrowLeft className='w-4 h-4' />
-							이전 페이지
+							{t('common.previousPage')}
 						</Button>
 						<Button asChild className='w-full sm:w-auto gap-2'>
 							<Link to='/'>
 								<Home className='w-4 h-4' />
-								홈으로 이동
+								{t('common.goHome')}
 							</Link>
 						</Button>
 					</div>

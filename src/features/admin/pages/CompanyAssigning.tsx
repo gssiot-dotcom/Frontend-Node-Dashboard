@@ -23,6 +23,7 @@ import {
 	WifiOff,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
 	useCompanyAssignmentsQuery,
 	useUpdateCompanyGatewaysMutation,
@@ -60,6 +61,7 @@ function StatusBadge({
 }: {
 	status: CompanyStatus | GatewayStatus | NodeStatus
 }) {
+	const { t } = useTranslation()
 	const map: Record<string, string> = {
 		active:
 			'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
@@ -71,19 +73,11 @@ function StatusBadge({
 			'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
 		unassigned: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
 	}
-	const labels: Record<string, string> = {
-		active: '활성',
-		online: '온라인',
-		inactive: '비활성',
-		offline: '오프라인',
-		warning: '경고',
-		unassigned: '미배정',
-	}
 	return (
 		<span
 			className={`px-2 py-0.5 rounded-md text-xs font-medium border ${map[status] ?? map.inactive}`}
 		>
-			{labels[status] ?? status}
+			{t(`common.status.${status}`, status)}
 		</span>
 	)
 }
@@ -169,6 +163,7 @@ function GatewayTab({
 	onAssign: (gwId: string) => void
 	onRevoke: (gwId: string) => void
 }) {
+	const { t } = useTranslation()
 	const [search, setSearch] = useState('')
 
 	const assigned = gateways.filter(g => g.companyId === company._id)
@@ -189,10 +184,12 @@ function GatewayTab({
 				<div className='flex items-center justify-between px-4 py-3 border-b border-border'>
 					<div>
 						<h3 className='text-sm font-semibold text-foreground'>
-							배정된 게이트웨이
+							{t('pages.companyAssignment.assignedGateways')}
 						</h3>
 						<p className='text-xs text-muted-foreground mt-0.5'>
-							{assigned.length}개 배정됨
+							{t('pages.companyAssignment.assignedCount', {
+								count: assigned.length,
+							})}
 						</p>
 					</div>
 					<Wifi className='w-4 h-4 text-muted-foreground' />
@@ -200,7 +197,7 @@ function GatewayTab({
 
 				{assigned.length === 0 ? (
 					<div className='py-10 text-center text-sm text-muted-foreground'>
-						배정된 게이트웨이가 없습니다
+						{t('pages.companyAssignment.noAssignedGateways')}
 					</div>
 				) : (
 					<div className='divide-y divide-border'>
@@ -218,7 +215,8 @@ function GatewayTab({
 											{gw.serialNumber}
 										</p>
 										<p className='text-xs text-muted-foreground'>
-											{gw.installedLocation || '설치 위치 없음'}
+											{gw.installedLocation ||
+												t('dashboard.fallbacks.noLocation')}
 										</p>
 									</div>
 								</div>
@@ -244,10 +242,10 @@ function GatewayTab({
 				<div className='flex items-center justify-between px-4 py-3 border-b border-border'>
 					<div>
 						<h3 className='text-sm font-semibold text-foreground'>
-							미배정 게이트웨이
+							{t('pages.companyAssignment.unassignedGateways')}
 						</h3>
 						<p className='text-xs text-muted-foreground mt-0.5'>
-							배정 가능한 목록
+							{t('pages.companyAssignment.availableList')}
 						</p>
 					</div>
 
@@ -256,7 +254,7 @@ function GatewayTab({
 						<Input
 							value={search}
 							onChange={e => setSearch(e.target.value)}
-							placeholder='검색...'
+							placeholder={t('common.searchPlaceholder')}
 							className='h-7 pl-7 pr-3 text-xs w-32'
 						/>
 					</div>
@@ -264,7 +262,7 @@ function GatewayTab({
 
 				{available.length === 0 ? (
 					<div className='py-10 text-center text-sm text-muted-foreground'>
-						배정 가능한 게이트웨이가 없습니다
+						{t('pages.companyAssignment.noAvailableGateways')}
 					</div>
 				) : (
 					<div className='divide-y divide-border'>
@@ -282,7 +280,8 @@ function GatewayTab({
 											{gw.serialNumber}
 										</p>
 										<p className='text-xs text-muted-foreground'>
-											{gw.installedLocation || '설치 위치 없음'}
+											{gw.installedLocation ||
+												t('dashboard.fallbacks.noLocation')}
 										</p>
 									</div>
 								</div>
@@ -296,7 +295,7 @@ function GatewayTab({
 										onClick={() => onAssign(gw._id)}
 									>
 										<Plus className='w-3 h-3' />
-										배정
+										{t('pages.companyAssignment.assign')}
 									</Button>
 								</div>
 							</div>
@@ -328,6 +327,7 @@ function NodeTab({
 	onAssign: (nodeId: string) => void
 	onRevoke: (nodeId: string) => void
 }) {
+	const { t } = useTranslation()
 	const [assignedTypeFilter, setAssignedTypeFilter] = useState<string>('all')
 	const [availableTypeFilter, setAvailableTypeFilter] = useState<string>('all')
 	const [assignedSearch, setAssignedSearch] = useState('')
@@ -373,10 +373,12 @@ function NodeTab({
 					<div className='flex items-center justify-between mb-2.5'>
 						<div>
 							<h3 className='text-sm font-semibold text-foreground'>
-								배정된 노드
+								{t('pages.companyAssignment.assignedNodes')}
 							</h3>
 							<p className='text-xs text-muted-foreground mt-0.5'>
-								{nodes.filter(n => n.companyId === company._id).length}개 배정됨
+								{t('pages.companyAssignment.assignedCount', {
+									count: nodes.filter(n => n.companyId === company._id).length,
+								})}
 							</p>
 						</div>
 						<div className='relative'>
@@ -384,7 +386,7 @@ function NodeTab({
 							<Input
 								value={assignedSearch}
 								onChange={e => setAssignedSearch(e.target.value)}
-								placeholder='검색...'
+								placeholder={t('common.searchPlaceholder')}
 								className='h-7 pl-7 pr-3 text-xs w-28'
 							/>
 						</div>
@@ -411,10 +413,12 @@ function NodeTab({
 						<Table>
 							<TableHeader>
 								<TableRow>
-									<TableHead className='w-14'>번호</TableHead>
-									<TableHead>타입</TableHead>
-									<TableHead>상태</TableHead>
-									<TableHead>위치</TableHead>
+									<TableHead className='w-14'>
+										{t('pages.companyAssignment.number')}
+									</TableHead>
+									<TableHead>{t('dashboard.table.type')}</TableHead>
+									<TableHead>{t('dashboard.table.status')}</TableHead>
+									<TableHead>{t('dashboard.table.location')}</TableHead>
 									<TableHead className='w-10' />
 								</TableRow>
 							</TableHeader>
@@ -425,7 +429,7 @@ function NodeTab({
 											colSpan={5}
 											className='text-center text-muted-foreground py-8 text-sm'
 										>
-											노드 없음
+											{t('pages.companyAssignment.noNodes')}
 										</TableCell>
 									</TableRow>
 								) : (
@@ -466,10 +470,10 @@ function NodeTab({
 					<div className='flex items-center justify-between mb-2.5'>
 						<div>
 							<h3 className='text-sm font-semibold text-foreground'>
-								미배정 노드
+								{t('pages.companyAssignment.unassignedNodes')}
 							</h3>
 							<p className='text-xs text-muted-foreground mt-0.5'>
-								배정 가능한 목록
+								{t('pages.companyAssignment.availableList')}
 							</p>
 						</div>
 						<div className='relative'>
@@ -477,7 +481,7 @@ function NodeTab({
 							<Input
 								value={availableSearch}
 								onChange={e => setAvailableSearch(e.target.value)}
-								placeholder='검색...'
+								placeholder={t('common.searchPlaceholder')}
 								className='h-7 pl-7 pr-3 text-xs w-28'
 							/>
 						</div>
@@ -503,9 +507,11 @@ function NodeTab({
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead className='w-14'>번호</TableHead>
-								<TableHead>타입</TableHead>
-								<TableHead>위치</TableHead>
+								<TableHead className='w-14'>
+									{t('pages.companyAssignment.number')}
+								</TableHead>
+								<TableHead>{t('dashboard.table.type')}</TableHead>
+								<TableHead>{t('dashboard.table.location')}</TableHead>
 								<TableHead className='w-14' />
 							</TableRow>
 						</TableHeader>
@@ -516,7 +522,7 @@ function NodeTab({
 										colSpan={4}
 										className='text-center text-muted-foreground py-8 text-sm'
 									>
-										배정 가능한 노드 없음
+										{t('pages.companyAssignment.noAvailableNodes')}
 									</TableCell>
 								</TableRow>
 							) : (
@@ -539,7 +545,7 @@ function NodeTab({
 												onClick={() => onAssign(n._id)}
 											>
 												<Plus className='w-3 h-3' />
-												배정
+												{t('pages.companyAssignment.assign')}
 											</Button>
 										</TableCell>
 									</TableRow>
@@ -556,6 +562,7 @@ function NodeTab({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function CompanyAssignmentPage() {
+	const { t } = useTranslation()
 	const [selectedCompanyId, setSelectedCompanyId] = useState('')
 	const [companySearch, setCompanySearch] = useState('')
 	const [activeTab, setActiveTab] = useState<'gateways' | 'nodes'>('gateways')
@@ -579,7 +586,7 @@ export default function CompanyAssignmentPage() {
 	if (isLoading) {
 		return (
 			<div className='flex min-h-screen items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>Loading...</p>
+				<p className='text-sm text-muted-foreground'>{t('common.loading')}</p>
 			</div>
 		)
 	}
@@ -588,7 +595,7 @@ export default function CompanyAssignmentPage() {
 		return (
 			<div className='flex min-h-screen items-center justify-center'>
 				<p className='text-sm text-destructive'>
-					Failed to load company assignments
+					{t('pages.companyAssignment.failed')}
 				</p>
 			</div>
 		)
@@ -602,7 +609,9 @@ export default function CompanyAssignmentPage() {
 	if (!selectedCompany) {
 		return (
 			<div className='flex min-h-screen items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>No company found</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('pages.companyAssignment.noCompany')}
+				</p>
 			</div>
 		)
 	}
@@ -745,10 +754,10 @@ export default function CompanyAssignmentPage() {
 			<div className='border-b border-border bg-card'>
 				<div className='max-w-7xl mx-auto px-4 sm:px-6 py-6'>
 					<h1 className='text-xl sm:text-2xl font-bold text-foreground'>
-						회사 배정 관리
+						{t('pages.companyAssignment.title')}
 					</h1>
 					<p className='text-sm text-muted-foreground mt-1'>
-						회사별 게이트웨이, 노드, 매니저를 배정하고 관리합니다.
+						{t('pages.companyAssignment.description')}
 					</p>
 				</div>
 			</div>
@@ -763,9 +772,11 @@ export default function CompanyAssignmentPage() {
 									<Building2 className='w-5 h-5 text-primary' />
 								</div>
 								<div>
-									<h2 className='font-semibold text-foreground'>회사 관리</h2>
+									<h2 className='font-semibold text-foreground'>
+										{t('pages.companyAssignment.companyManagement')}
+									</h2>
 									<p className='text-xs text-muted-foreground'>
-										회사를 선택하세요
+										{t('pages.companyAssignment.selectCompany')}
 									</p>
 								</div>
 							</div>
@@ -777,7 +788,7 @@ export default function CompanyAssignmentPage() {
 								<Input
 									value={companySearch}
 									onChange={e => setCompanySearch(e.target.value)}
-									placeholder='회사 검색...'
+									placeholder={t('pages.companyAssignment.searchCompany')}
 									className='pl-9 h-10 text-sm'
 								/>
 							</div>
@@ -815,13 +826,14 @@ export default function CompanyAssignmentPage() {
 												{company.companyName}
 											</p>
 											<p className='text-xs text-muted-foreground'>
-												GW {gwCount} · 노드 {nodeCount}
+												{t('pages.companyAssignment.gateways')} {gwCount} ·{' '}
+												{t('pages.companyAssignment.nodes')} {nodeCount}
 											</p>
 										</div>
 
 										{company.companyStatus === 'inactive' && (
 											<span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md'>
-												비활성
+												{t('common.status.inactive')}
 											</span>
 										)}
 									</button>
@@ -855,8 +867,14 @@ export default function CompanyAssignmentPage() {
 
 							<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 								{[
-									{ label: '게이트웨이', value: assignedGWCount },
-									{ label: '노드', value: assignedNodeCount },
+									{
+										label: t('pages.companyAssignment.gateways'),
+										value: assignedGWCount,
+									},
+									{
+										label: t('pages.companyAssignment.nodes'),
+										value: assignedNodeCount,
+									},
 								].map((s, i) => (
 									<div
 										key={i}
@@ -883,8 +901,16 @@ export default function CompanyAssignmentPage() {
 								<div className='p-5 sm:p-6 border-b border-border'>
 									<TabsList className='grid grid-cols-2 w-full glass p-1 h-auto rounded-lg'>
 										{[
-											{ value: 'gateways', label: '게이트웨이', icon: Wifi },
-											{ value: 'nodes', label: '노드', icon: Link2 },
+											{
+												value: 'gateways',
+												label: t('pages.companyAssignment.gateways'),
+												icon: Wifi,
+											},
+											{
+												value: 'nodes',
+												label: t('pages.companyAssignment.nodes'),
+												icon: Link2,
+											},
 										].map(tab => (
 											<TabsTrigger
 												key={tab.value}
@@ -946,11 +972,13 @@ function SaveBar({
 	saving: boolean
 	onSave: () => void
 }) {
+	const { t } = useTranslation()
+
 	return (
 		<div className='flex items-center justify-end gap-3 mt-6 pt-4 border-t border-border'>
 			{isDirty && (
 				<span className='text-xs text-amber-600 dark:text-amber-400'>
-					저장되지 않은 변경사항
+					{t('pages.companyAssignment.unsavedChanges')}
 				</span>
 			)}
 			<Button
@@ -962,12 +990,12 @@ function SaveBar({
 				{saving ? (
 					<>
 						<Loader2 className='w-3.5 h-3.5 animate-spin' />
-						저장 중...
+						{t('common.saving')}
 					</>
 				) : (
 					<>
 						<Save className='w-3.5 h-3.5' />
-						저장
+						{t('common.save')}
 					</>
 				)}
 			</Button>

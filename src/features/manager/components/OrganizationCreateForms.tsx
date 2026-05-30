@@ -18,6 +18,7 @@ import {
 	UserPlus,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const BUILDING_TYPES = [
 	{ value: 'office', label: '오피스' },
@@ -34,6 +35,7 @@ const USER_TYPES = [
 ]
 
 function OrganizationCreateCards() {
+	const { t } = useTranslation()
 	// Building form
 	const [buildingName, setBuildingName] = useState('')
 	const [buildingAddress, setBuildingAddress] = useState('')
@@ -73,7 +75,9 @@ function OrganizationCreateCards() {
 		setBuildingSubmitting(false)
 		setBuildingResult({
 			success: true,
-			message: `건물이 생성되었습니다. (${buildingName})`,
+			message: t('pages.organizationCreate.buildingCreated', {
+				name: buildingName,
+			}),
 		})
 
 		setBuildingName('')
@@ -94,7 +98,9 @@ function OrganizationCreateCards() {
 		setMemberSubmitting(false)
 		setMemberResult({
 			success: true,
-			message: `멤버가 생성되었습니다. (${memberName})`,
+			message: t('pages.organizationCreate.memberCreated', {
+				name: memberName,
+			}),
 		})
 
 		setMemberName('')
@@ -122,19 +128,23 @@ function OrganizationCreateCards() {
 						<Building2 className='w-5 h-5 text-primary' />
 					</div>
 					<div>
-						<h2 className='font-semibold text-foreground'>건물 생성</h2>
-						<p className='text-xs text-muted-foreground'>새로운 건물 등록</p>
+						<h2 className='font-semibold text-foreground'>
+							{t('pages.organizationCreate.buildingTitle')}
+						</h2>
+						<p className='text-xs text-muted-foreground'>
+							{t('pages.organizationCreate.buildingDescription')}
+						</p>
 					</div>
 				</div>
 
 				<div className='space-y-4'>
 					<div className='space-y-2'>
 						<Label htmlFor='building-name' className='text-sm font-medium'>
-							건물명
+							{t('pages.organizationCreate.buildingName')}
 						</Label>
 						<Input
 							id='building-name'
-							placeholder='예: A동'
+							placeholder={t('pages.organizationCreate.buildingPlaceholder')}
 							value={buildingName}
 							onChange={e => {
 								setBuildingName(e.target.value)
@@ -145,11 +155,11 @@ function OrganizationCreateCards() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='building-address' className='text-sm font-medium'>
-							주소
+							{t('pages.organizationCreate.address')}
 						</Label>
 						<Input
 							id='building-address'
-							placeholder='예: 서울시 강남구 테헤란로 123'
+							placeholder={t('pages.organizationCreate.addressPlaceholder')}
 							value={buildingAddress}
 							onChange={e => {
 								setBuildingAddress(e.target.value)
@@ -160,11 +170,13 @@ function OrganizationCreateCards() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='building-type' className='text-sm font-medium'>
-							건물 유형
+							{t('pages.organizationCreate.buildingType')}
 						</Label>
 						<Select value={buildingType} onValueChange={setBuildingType}>
 							<SelectTrigger id='building-type'>
-								<SelectValue placeholder='건물 유형 선택' />
+								<SelectValue
+									placeholder={t('pages.organizationCreate.selectBuildingType')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{BUILDING_TYPES.map(type => (
@@ -200,7 +212,9 @@ function OrganizationCreateCards() {
 						className='w-full gap-2'
 					>
 						<Plus className='w-4 h-4' />
-						{buildingSubmitting ? '생성 중...' : '건물 생성'}
+						{buildingSubmitting
+							? t('pages.organizationCreate.creating')
+							: t('pages.organizationCreate.createBuilding')}
 					</Button>
 				</div>
 			</div>
@@ -212,8 +226,12 @@ function OrganizationCreateCards() {
 						<UserPlus className='w-5 h-5 text-primary' />
 					</div>
 					<div>
-						<h2 className='font-semibold text-foreground'>멤버 생성</h2>
-						<p className='text-xs text-muted-foreground'>새로운 멤버 등록</p>
+						<h2 className='font-semibold text-foreground'>
+							{t('pages.organizationCreate.memberTitle')}
+						</h2>
+						<p className='text-xs text-muted-foreground'>
+							{t('pages.organizationCreate.memberDescription')}
+						</p>
 					</div>
 				</div>
 
@@ -221,11 +239,11 @@ function OrganizationCreateCards() {
 					<div className='grid grid-cols-2 gap-3'>
 						<div className='space-y-2'>
 							<Label htmlFor='member-name' className='text-sm font-medium'>
-								이름
+								{t('pages.organizationCreate.memberName')}
 							</Label>
 							<Input
 								id='member-name'
-								placeholder='예: 홍길동'
+								placeholder={t('pages.organizationCreate.memberPlaceholder')}
 								value={memberName}
 								onChange={e => {
 									setMemberName(e.target.value)
@@ -236,11 +254,13 @@ function OrganizationCreateCards() {
 
 						<div className='space-y-2'>
 							<Label htmlFor='user-type' className='text-sm font-medium'>
-								유형
+								{t('pages.organizationCreate.userType')}
 							</Label>
 							<Select value={userType} onValueChange={setUserType}>
 								<SelectTrigger id='user-type'>
-									<SelectValue placeholder='유형 선택' />
+									<SelectValue
+										placeholder={t('pages.organizationCreate.selectType')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{USER_TYPES.map(type => (
@@ -255,12 +275,12 @@ function OrganizationCreateCards() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='member-email' className='text-sm font-medium'>
-							이메일
+							{t('pages.organizationCreate.email')}
 						</Label>
 						<Input
 							id='member-email'
 							type='email'
-							placeholder='예: hong@example.com'
+							placeholder={t('pages.organizationCreate.emailPlaceholder')}
 							value={email}
 							onChange={e => {
 								setEmail(e.target.value)
@@ -271,14 +291,14 @@ function OrganizationCreateCards() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='member-phone' className='text-sm font-medium'>
-							연락처{' '}
+							{t('pages.organizationCreate.contact')}{' '}
 							<span className='text-muted-foreground font-normal'>
-								(선택사항)
+								{t('pages.organizationCreate.optional')}
 							</span>
 						</Label>
 						<Input
 							id='member-phone'
-							placeholder='예: 010-1234-5678'
+							placeholder={t('pages.organizationCreate.phonePlaceholder')}
 							value={phone}
 							onChange={e => {
 								setPhone(e.target.value)
@@ -290,13 +310,13 @@ function OrganizationCreateCards() {
 					<div className='grid grid-cols-2 gap-3'>
 						<div className='space-y-2'>
 							<Label htmlFor='member-password' className='text-sm font-medium'>
-								비밀번호
+								{t('pages.organizationCreate.password')}
 							</Label>
 							<div className='relative'>
 								<Input
 									id='member-password'
 									type={showPassword ? 'text' : 'password'}
-									placeholder='비밀번호'
+									placeholder={t('pages.organizationCreate.passwordPlaceholder')}
 									value={password}
 									onChange={e => {
 										setPassword(e.target.value)
@@ -323,13 +343,13 @@ function OrganizationCreateCards() {
 								htmlFor='member-confirm-password'
 								className='text-sm font-medium'
 							>
-								비밀번호 확인
+								{t('pages.organizationCreate.confirmPassword')}
 							</Label>
 							<div className='relative'>
 								<Input
 									id='member-confirm-password'
 									type={showConfirmPassword ? 'text' : 'password'}
-									placeholder='확인'
+									placeholder={t('pages.organizationCreate.confirmPlaceholder')}
 									value={confirmPassword}
 									onChange={e => {
 										setConfirmPassword(e.target.value)
@@ -351,7 +371,7 @@ function OrganizationCreateCards() {
 							</div>
 							{passwordMismatch && (
 								<p className='text-xs text-destructive'>
-									비밀번호가 일치하지 않습니다.
+									{t('pages.organizationCreate.passwordMismatch')}
 								</p>
 							)}
 						</div>
@@ -376,7 +396,9 @@ function OrganizationCreateCards() {
 						className='w-full gap-2'
 					>
 						<Plus className='w-4 h-4' />
-						{memberSubmitting ? '생성 중...' : '멤버 생성'}
+						{memberSubmitting
+							? t('pages.organizationCreate.creating')
+							: t('pages.organizationCreate.createMember')}
 					</Button>
 				</div>
 			</div>

@@ -17,6 +17,7 @@ import { Activity, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
+import BuildingPlanLocationModal from '../components/BuildingPlanLocationModal'
 import {
 	useBuildingNodesPageQuery,
 	useUpdateBuildingAlarmLevelMutation,
@@ -25,19 +26,20 @@ import { AngleNode, GatewayRef, NodeTypes } from '../types/node.types'
 import { GangformPayload } from './GangformNodes'
 
 const STATUS_FILTERS = [
-	{ label: 'All', value: 'all' },
-	{ label: 'Stable', value: 'safe' },
-	{ label: 'Caution', value: 'caution' },
-	{ label: 'Warning', value: 'warning' },
-	{ label: 'Danger', value: 'danger' },
-	{ label: 'Offline', value: 'offline' },
+	{ labelKey: 'verticalNodes.filterButtons.all', value: 'all' },
+	{ labelKey: 'verticalNodes.filterButtons.stable', value: 'safe' },
+	{ labelKey: 'verticalNodes.filterButtons.caution', value: 'caution' },
+	{ labelKey: 'verticalNodes.filterButtons.warning', value: 'warning' },
+	{ labelKey: 'verticalNodes.filterButtons.danger', value: 'danger' },
+	{ labelKey: 'verticalNodes.filterButtons.offline', value: 'offline' },
 ] as const
 
 type NodePageState = {
 	companyId?: string
 	buildingId?: string
 	buildingName?: string
-	nodeType?: NodeTypes
+	nodeType: NodeTypes
+	buildingPlanImageUrls?: string[]
 }
 
 function getGatewayLabel(gatewayId: GatewayRef) {
@@ -76,6 +78,7 @@ export default function AdminAngleNodesPage() {
 	const [graphicNode, setGraphicNode] = useState<AngleNodeNodeUi | null>(null)
 	const [latestGraphicPoint, setLatestGraphicPoint] =
 		useState<GangformPayload | null>(null)
+	const [locationModalOpen, setLocationModalOpen] = useState(false)
 
 	const [alarmLevels, setAlarmLevels] = useState<AlarmLevels>({
 		safe: 0,
@@ -92,6 +95,7 @@ export default function AdminAngleNodesPage() {
 
 	const companyId = state.companyId
 	const buildingId = state.buildingId || params.buildingId
+	const buildingPlanImageUrls = state.buildingPlanImageUrls || []
 
 	// Bu page doim angle-node uchun.
 	// State bo‘lmasa ham direct refresh holatida fallback ishlaydi.
@@ -201,7 +205,7 @@ export default function AdminAngleNodesPage() {
 	if (!companyId || !buildingId) {
 		return (
 			<div className='p-6 text-sm text-muted-foreground'>
-				필수 정보가 없습니다. 건물 페이지에서 다시 진입해주세요.
+				{t('common.missingNodePageInfo')}
 			</div>
 		)
 	}
@@ -209,7 +213,7 @@ export default function AdminAngleNodesPage() {
 	if (isError) {
 		return (
 			<div className='p-6 text-sm text-destructive'>
-				노드 데이터를 불러오지 못했습니다.
+				{t('common.failedNodeData')}
 			</div>
 		)
 	}
@@ -226,30 +230,33 @@ export default function AdminAngleNodesPage() {
 					<div>
 						<div className='flex items-center gap-2'>
 							<h1 className='text-xl lg:text-2xl font-bold text-foreground'>
-								비계전도 노드
+								{t('nodePages.angleTitle')}
 							</h1>
 
 							<div className='flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 text-xs text-muted-foreground'>
 								{connected ? (
 									<>
 										<span className='w-1.5 h-1.5 rounded-full bg-gss-safe animate-pulse' />
-										Live
+										{t('nodePages.live')}
 									</>
 								) : (
 									<>
 										<span className='w-1.5 h-1.5 rounded-full bg-gss-offline' />
-										Disconnected
+										{t('nodePages.disconnected')}
 									</>
 								)}
 							</div>
 						</div>
 
 						<p className='text-sm text-muted-foreground mt-0.5'>
-							{filtered.length} of {nodesWithUi.length} nodes
+							{t('nodePages.countSummary', {
+								shown: filtered.length,
+								total: nodesWithUi.length,
+							})}
 						</p>
 
 						<p className='text-xs text-muted-foreground mt-0.5'>
-							Gateways: {gatewayList.length}
+							{t('nodePages.gatewaysSummary', { count: gatewayList.length })}
 						</p>
 					</div>
 
@@ -258,7 +265,7 @@ export default function AdminAngleNodesPage() {
 						<Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
 
 						<Input
-							placeholder='Search nodes...'
+							placeholder={t('verticalNodes.header.searchPlaceholder')}
 							value={search}
 							onChange={e => setSearch(e.target.value)}
 							className='pl-9 bg-muted/30 border-border/50 focus:border-primary/50 h-9 text-sm'
@@ -296,14 +303,23 @@ export default function AdminAngleNodesPage() {
 									: 'text-muted-foreground hover:text-foreground'
 							}`}
 						>
-							{f.label}
+							{t(f.labelKey)}
 							<span className='text-[10px] opacity-70'>
 								({counts[f.value]})
 							</span>
 						</Button>
 					))}
 
-					<div className='ml-auto shrink-0 max-sm:hidden'>
+					<div className='ml-auto shrink-0 max-sm:hidden flex items-center gap-2'>
+						<Button
+							variant='outline'
+							size='sm'
+							onClick={() => setLocationModalOpen(true)}
+							className='h-7 text-xs'
+						>
+							{t('nodePages.setPlanPhoto')}
+						</Button>
+
 						<AlarmLevelSettings
 							value={alarmLevels}
 							onChange={setAlarmLevels}
@@ -331,7 +347,7 @@ export default function AdminAngleNodesPage() {
 					<div className='text-center py-16'>
 						<Activity className='w-10 h-10 text-muted-foreground/30 mx-auto mb-3' />
 						<p className='text-sm text-muted-foreground'>
-							No nodes match your filter
+							{t('common.noNodesMatch')}
 						</p>
 					</div>
 				) : (
@@ -368,6 +384,15 @@ export default function AdminAngleNodesPage() {
 							? latestGraphicPoint
 							: null
 					}
+				/>
+
+				<BuildingPlanLocationModal
+					isOpen={locationModalOpen}
+					onClose={() => setLocationModalOpen(false)}
+					buildingId={buildingId}
+					nodeType={nodeType}
+					nodes={nodesList}
+					planImageUrls={buildingPlanImageUrls}
 				/>
 			</motion.div>
 		</div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import OrganizationCreateCards from '../components/OrganizationCreateForms'
 import OrganizationTabsSection from '../components/OrganizationTabsSection'
 
@@ -242,6 +243,8 @@ export const MOCK_MEMBERS = [
 ]
 
 export default function OrganizationPage() {
+	const { t } = useTranslation()
+
 	return (
 		<motion.div
 			initial={{ opacity: 0 }}
@@ -251,10 +254,10 @@ export default function OrganizationPage() {
 			<div className='border-b border-border bg-card'>
 				<div className='max-w-6xl mx-auto px-4 sm:px-6 py-6'>
 					<h1 className='text-xl sm:text-2xl font-bold text-foreground'>
-						조직 관리
+						{t('pages.organizations.title')}
 					</h1>
 					<p className='text-sm text-muted-foreground mt-1'>
-						건물 및 멤버를 등록하고 게이트웨이와 작업자를 할당합니다.
+						{t('pages.organizations.description')}
 					</p>
 				</div>
 			</div>

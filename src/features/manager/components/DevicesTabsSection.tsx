@@ -28,6 +28,7 @@ import {
 	Search,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MOCK_GATEWAYS, MOCK_NODES, parseNodeNumbers } from '../pages/Devices'
 
 function getNodeTypeLabel(type: string) {
@@ -38,7 +39,7 @@ function getGatewayTypeLabel(type: string) {
 	return GATEWAY_TYPES.find(t => t.value === type)?.label || type
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, t: any) {
 	const styles: Record<string, string> = {
 		active:
 			'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
@@ -47,22 +48,17 @@ function getStatusBadge(status: string) {
 			'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
 		unassigned: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
 	}
-	const labels: Record<string, string> = {
-		active: '활성',
-		inactive: '비활성',
-		warning: '경고',
-		unassigned: '미배정',
-	}
 	return (
 		<span
 			className={`px-2 py-0.5 rounded-md text-xs font-medium border ${styles[status] || styles.inactive}`}
 		>
-			{labels[status] || status}
+			{t(`common.status.${status}`, status)}
 		</span>
 	)
 }
 
 function DevicesTabsSection() {
+	const { t } = useTranslation()
 	const [activeTab, setActiveTab] = useState('nodes')
 
 	const [nodeSearch, setNodeSearch] = useState('')
@@ -140,7 +136,9 @@ function DevicesTabsSection() {
 		setRegSubmitting(false)
 		setRegResult({
 			success: true,
-			message: `${regParsedNodes.length}개의 노드가 게이트웨이에 등록되었습니다.`,
+			message: t('pages.devices.table.nodesRegistered', {
+				count: regParsedNodes.length,
+			}),
 		})
 
 		setRegGatewaySerial('')
@@ -150,12 +148,12 @@ function DevicesTabsSection() {
 		setNodeCheckStatus('idle')
 	}
 
-	const [nodeTypeFilter, setNodeTypeFilter] = useState('전체')
+	const [nodeTypeFilter, setNodeTypeFilter] = useState('all')
 	const [refSearch, setRefSearch] = useState('')
 
 	const filteredRefNodes = MOCK_NODES.filter(node => {
 		const matchType =
-			nodeTypeFilter === '전체' ||
+			nodeTypeFilter === 'all' ||
 			getNodeTypeLabel(node.node_type) === nodeTypeFilter
 		const matchSearch =
 			node.node_number.toString().includes(refSearch) ||
@@ -166,20 +164,26 @@ function DevicesTabsSection() {
 	return (
 		<Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
 			<TabsList className='grid w-full grid-cols-3 max-w-md'>
-				<TabsTrigger value='nodes'>노드 목록</TabsTrigger>
-				<TabsTrigger value='gateways'>게이트웨이 목록</TabsTrigger>
-				<TabsTrigger value='register'>노드 등록</TabsTrigger>
+				<TabsTrigger value='nodes'>{t('pages.devices.table.nodeList')}</TabsTrigger>
+				<TabsTrigger value='gateways'>
+					{t('pages.devices.table.gatewayList')}
+				</TabsTrigger>
+				<TabsTrigger value='register'>
+					{t('pages.devices.table.nodeRegistration')}
+				</TabsTrigger>
 			</TabsList>
 
 			{/* Nodes Table Tab */}
 			<TabsContent value='nodes' className='mt-6'>
 				<div className='glass rounded-xl p-5 sm:p-6'>
 					<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-						<h3 className='font-semibold text-foreground'>노드 목록</h3>
+						<h3 className='font-semibold text-foreground'>
+							{t('pages.devices.table.nodeList')}
+						</h3>
 						<div className='relative w-full sm:w-64'>
 							<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 							<Input
-								placeholder='검색...'
+								placeholder={t('common.searchPlaceholder')}
 								value={nodeSearch}
 								onChange={e => setNodeSearch(e.target.value)}
 								className='pl-9'
@@ -190,12 +194,14 @@ function DevicesTabsSection() {
 						<Table>
 							<TableHeader>
 								<TableRow>
-									<TableHead className='w-20'>노드 번호</TableHead>
-									<TableHead>노드 타입</TableHead>
-									<TableHead>게이트웨이</TableHead>
-									<TableHead>상태</TableHead>
-									<TableHead>위치</TableHead>
-									<TableHead>회사명</TableHead>
+									<TableHead className='w-20'>
+										{t('pages.devices.table.nodeNumber')}
+									</TableHead>
+									<TableHead>{t('pages.devices.table.nodeType')}</TableHead>
+									<TableHead>{t('pages.devices.table.gateway')}</TableHead>
+									<TableHead>{t('dashboard.table.status')}</TableHead>
+									<TableHead>{t('dashboard.table.location')}</TableHead>
+									<TableHead>{t('pages.devices.table.companyName')}</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -210,7 +216,7 @@ function DevicesTabsSection() {
 										<TableCell className='font-mono text-sm'>
 											{node.gateway_number || '-'}
 										</TableCell>
-										<TableCell>{getStatusBadge(node.node_status)}</TableCell>
+										<TableCell>{getStatusBadge(node.node_status, t)}</TableCell>
 										<TableCell className='text-sm text-muted-foreground'>
 											{node.position}
 										</TableCell>
@@ -225,7 +231,7 @@ function DevicesTabsSection() {
 											colSpan={6}
 											className='text-center text-muted-foreground py-8'
 										>
-											검색 결과가 없습니다.
+											{t('pages.devices.table.noResults')}
 										</TableCell>
 									</TableRow>
 								)}
@@ -239,11 +245,13 @@ function DevicesTabsSection() {
 			<TabsContent value='gateways' className='mt-6'>
 				<div className='glass rounded-xl p-5 sm:p-6'>
 					<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4'>
-						<h3 className='font-semibold text-foreground'>게이트웨이 목록</h3>
+						<h3 className='font-semibold text-foreground'>
+							{t('pages.devices.table.gatewayList')}
+						</h3>
 						<div className='relative w-full sm:w-64'>
 							<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 							<Input
-								placeholder='검색...'
+								placeholder={t('common.searchPlaceholder')}
 								value={gatewaySearch}
 								onChange={e => setGatewaySearch(e.target.value)}
 								className='pl-9'
@@ -254,13 +262,13 @@ function DevicesTabsSection() {
 						<Table>
 							<TableHeader>
 								<TableRow>
-									<TableHead>게이트웨이 번호</TableHead>
-									<TableHead>타입</TableHead>
-									<TableHead>상태</TableHead>
-									<TableHead>회사명</TableHead>
-									<TableHead>건물명</TableHead>
-									<TableHead>연결</TableHead>
-									<TableHead>구역</TableHead>
+									<TableHead>{t('pages.devices.table.gatewayNumber')}</TableHead>
+									<TableHead>{t('dashboard.table.type')}</TableHead>
+									<TableHead>{t('dashboard.table.status')}</TableHead>
+									<TableHead>{t('pages.devices.table.companyName')}</TableHead>
+									<TableHead>{t('pages.devices.table.buildingName')}</TableHead>
+									<TableHead>{t('pages.devices.table.connection')}</TableHead>
+									<TableHead>{t('pages.devices.table.zone')}</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -272,7 +280,7 @@ function DevicesTabsSection() {
 										<TableCell className='text-sm'>
 											{getGatewayTypeLabel(gw.gateway_type)}
 										</TableCell>
-										<TableCell>{getStatusBadge(gw.status)}</TableCell>
+										<TableCell>{getStatusBadge(gw.status, t)}</TableCell>
 										<TableCell className='text-sm'>{gw.company_name}</TableCell>
 										<TableCell className='text-sm'>
 											{gw.building_name}
@@ -284,7 +292,9 @@ function DevicesTabsSection() {
 												<span
 													className={`w-1.5 h-1.5 rounded-full ${gw.gateway_alive ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
 												/>
-												{gw.gateway_alive ? '온라인' : '오프라인'}
+												{gw.gateway_alive
+													? t('common.status.online')
+													: t('common.status.offline')}
 											</span>
 										</TableCell>
 										<TableCell className='text-sm text-muted-foreground'>
@@ -298,7 +308,7 @@ function DevicesTabsSection() {
 											colSpan={7}
 											className='text-center text-muted-foreground py-8'
 										>
-											검색 결과가 없습니다.
+											{t('pages.devices.table.noResults')}
 										</TableCell>
 									</TableRow>
 								)}
@@ -320,10 +330,10 @@ function DevicesTabsSection() {
 							</div>
 							<div>
 								<h2 className='font-semibold text-foreground'>
-									게이트웨이에 노드 등록
+									{t('pages.devices.table.registerToGateway')}
 								</h2>
 								<p className='text-xs text-muted-foreground'>
-									기존 노드를 게이트웨이에 연결합니다.
+									{t('pages.devices.table.registerDescription')}
 								</p>
 							</div>
 						</div>
@@ -331,7 +341,9 @@ function DevicesTabsSection() {
 						<div className='space-y-5'>
 							{/* Gateway Serial Input + Check */}
 							<div className='space-y-2'>
-								<Label className='text-sm font-medium'>게이트웨이 선택</Label>
+								<Label className='text-sm font-medium'>
+									{t('pages.devices.table.selectGateway')}
+								</Label>
 								<Select
 									value={regGatewaySerial}
 									onValueChange={v => {
@@ -340,7 +352,11 @@ function DevicesTabsSection() {
 									}}
 								>
 									<SelectTrigger>
-										<SelectValue placeholder='게이트웨이를 선택하세요' />
+										<SelectValue
+											placeholder={t(
+												'pages.devices.table.selectGatewayPlaceholder',
+											)}
+										/>
 									</SelectTrigger>
 									<SelectContent>
 										{MOCK_GATEWAYS.filter(gw => gw.gateway_alive).map(gw => (
@@ -354,7 +370,9 @@ function DevicesTabsSection() {
 
 							{/* Node Type Select */}
 							<div className='space-y-2'>
-								<Label className='text-sm font-medium'>노드 타입</Label>
+								<Label className='text-sm font-medium'>
+									{t('pages.devices.create.nodeType')}
+								</Label>
 								<Select
 									value={regNodeType}
 									onValueChange={v => {
@@ -363,7 +381,9 @@ function DevicesTabsSection() {
 									}}
 								>
 									<SelectTrigger>
-										<SelectValue placeholder='노드 타입 선택' />
+										<SelectValue
+											placeholder={t('pages.devices.create.selectNodeType')}
+										/>
 									</SelectTrigger>
 									<SelectContent>
 										{NODE_TYPES.map(type => (
@@ -377,10 +397,14 @@ function DevicesTabsSection() {
 
 							{/* Node Numbers Input + Check */}
 							<div className='space-y-2'>
-								<Label className='text-sm font-medium'>노드 번호</Label>
+								<Label className='text-sm font-medium'>
+									{t('pages.devices.create.nodeNumber')}
+								</Label>
 								<div className='flex gap-2'>
 									<Input
-										placeholder='예: 1 또는 1-10 또는 1,13,43'
+										placeholder={t(
+											'pages.devices.create.nodeNumbersPlaceholder',
+										)}
 										value={regNodeInput}
 										onChange={e => {
 											setRegNodeInput(e.target.value)
@@ -408,21 +432,23 @@ function DevicesTabsSection() {
 										) : (
 											<Search className='w-4 h-4' />
 										)}
-										확인
+										{t('pages.devices.table.check')}
 									</Button>
 								</div>
 								<div className='flex items-start gap-1.5 text-xs text-muted-foreground'>
 									<Info className='w-3.5 h-3.5 mt-0.5 shrink-0' />
-									<span>단일: 1 | 범위: 1-10 | 여러개: 1,13,43,23</span>
+									<span>{t('pages.devices.create.inputHint')}</span>
 								</div>
 								{nodeCheckStatus === 'found' && (
 									<p className='text-xs text-emerald-600 dark:text-emerald-400'>
-										{regParsedNodes.length}개의 노드가 확인되었습니다.
+										{t('pages.devices.table.nodesVerified', {
+											count: regParsedNodes.length,
+										})}
 									</p>
 								)}
 								{nodeCheckStatus === 'not_found' && (
 									<p className='text-xs text-destructive'>
-										일부 노드를 찾을 수 없거나 타입이 일치하지 않습니다.
+										{t('pages.devices.table.nodesVerifyFailed')}
 									</p>
 								)}
 							</div>
@@ -431,7 +457,9 @@ function DevicesTabsSection() {
 							{regParsedNodes.length > 0 && (
 								<div className='bg-muted/30 rounded-lg p-3'>
 									<p className='text-xs font-medium text-muted-foreground mb-2'>
-										등록할 노드 ({regParsedNodes.length}개)
+										{t('pages.devices.table.nodesToRegister', {
+											count: regParsedNodes.length,
+										})}
 									</p>
 									<div className='flex flex-wrap gap-1.5'>
 										{regParsedNodes.slice(0, 20).map(num => (
@@ -444,7 +472,9 @@ function DevicesTabsSection() {
 										))}
 										{regParsedNodes.length > 20 && (
 											<span className='px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded'>
-												+{regParsedNodes.length - 20}개 더
+												{t('pages.devices.create.moreCount', {
+													count: regParsedNodes.length - 20,
+												})}
 											</span>
 										)}
 									</div>
@@ -478,12 +508,12 @@ function DevicesTabsSection() {
 								{regSubmitting ? (
 									<>
 										<Loader2 className='w-4 h-4 animate-spin' />
-										등록 중...
+										{t('pages.devices.table.registering')}
 									</>
 								) : (
 									<>
 										<Link2 className='w-4 h-4' />
-										노드 등록
+										{t('pages.devices.table.registerNodes')}
 									</>
 								)}
 							</Button>
@@ -493,22 +523,28 @@ function DevicesTabsSection() {
 					{/* Right panel — node reference table */}
 					<div className='glass rounded-xl p-5 sm:p-6'>
 						<h3 className='font-semibold text-foreground mb-4'>
-							보유 노드 현황
+							{t('pages.devices.table.ownedNodes')}
 						</h3>
 
 						{/* Type filter chips */}
 						<div className='flex gap-2 flex-wrap mb-3'>
-							{['전체', ...NODE_TYPES.map(t => t.label)].map(type => (
+							{[
+								{ value: 'all', label: t('verticalNodes.filterButtons.all') },
+								...NODE_TYPES.map(type => ({
+									value: type.label,
+									label: type.label,
+								})),
+							].map(type => (
 								<button
-									key={type}
-									onClick={() => setNodeTypeFilter(type)}
+									key={type.value}
+									onClick={() => setNodeTypeFilter(type.value)}
 									className={`px-3 py-1 rounded-full text-xs border transition-colors ${
-										nodeTypeFilter === type
+										nodeTypeFilter === type.value
 											? 'bg-foreground text-background border-transparent'
 											: 'border-border text-muted-foreground hover:bg-muted'
 									}`}
 								>
-									{type}
+									{type.label}
 								</button>
 							))}
 						</div>
@@ -517,7 +553,7 @@ function DevicesTabsSection() {
 						<div className='relative mb-3'>
 							<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground' />
 							<Input
-								placeholder='번호, 위치 검색...'
+							placeholder={t('pages.devices.table.numberLocationSearch')}
 								className='pl-8 h-8 text-xs'
 								value={refSearch}
 								onChange={e => setRefSearch(e.target.value)}
@@ -529,10 +565,12 @@ function DevicesTabsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead className='w-14'>번호</TableHead>
-										<TableHead>타입</TableHead>
-										<TableHead>상태</TableHead>
-										<TableHead>위치</TableHead>
+										<TableHead className='w-14'>
+											{t('pages.companyAssignment.number')}
+										</TableHead>
+										<TableHead>{t('dashboard.table.type')}</TableHead>
+										<TableHead>{t('dashboard.table.status')}</TableHead>
+										<TableHead>{t('dashboard.table.location')}</TableHead>
 									</TableRow>
 								</TableHeader>
 
@@ -545,7 +583,7 @@ function DevicesTabsSection() {
 											<TableCell className='text-xs'>
 												{getNodeTypeLabel(node.node_type)}
 											</TableCell>
-											<TableCell>{getStatusBadge(node.node_status)}</TableCell>
+											<TableCell>{getStatusBadge(node.node_status, t)}</TableCell>
 											<TableCell className='text-xs text-muted-foreground'>
 												{node.position}
 											</TableCell>

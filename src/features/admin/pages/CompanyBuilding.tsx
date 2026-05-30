@@ -19,9 +19,9 @@ import gangformImg from '@/public/gangform.png'
 import angleImg from '@/public/pikechondo.png'
 import doorImg from '@/public/pikechondochuribmun.png'
 import { SelectGroup } from '@radix-ui/react-select'
-import { t } from 'i18next'
 import { Building2, Link2, MapPin } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import NodeTypeCard from '../../../components/NodeTypeCard'
 import {
@@ -60,6 +60,7 @@ const NODE_TYPES = [
 ]
 
 export default function CompanyBuildingsPage() {
+	const { t } = useTranslation()
 	const { companyId } = useParams()
 	const location = useLocation()
 	const navigate = useNavigate()
@@ -148,6 +149,7 @@ export default function CompanyBuildingsPage() {
 				buildingId: selectedBuilding._id,
 				buildingName: selectedBuilding.title,
 				nodeType: nodeType.type,
+				buildingPlanImageUrls: selectedBuilding.buildingPlanImage,
 			},
 		})
 	}
@@ -155,7 +157,9 @@ export default function CompanyBuildingsPage() {
 	if (isLoading) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>Loading buildings...</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.loadingBuildings')}
+				</p>
 			</div>
 		)
 	}
@@ -164,7 +168,7 @@ export default function CompanyBuildingsPage() {
 		return (
 			<div className='flex h-full items-center justify-center'>
 				<p className='text-sm text-destructive'>
-					Failed to load buildings data
+					{t('common.failedBuildings')}
 				</p>
 			</div>
 		)
@@ -173,7 +177,9 @@ export default function CompanyBuildingsPage() {
 	if (!selectedBuilding) {
 		return (
 			<div className='flex h-full items-center justify-center'>
-				<p className='text-sm text-muted-foreground'>No building data found</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('common.noBuildingData')}
+				</p>
 			</div>
 		)
 	}
@@ -195,7 +201,8 @@ export default function CompanyBuildingsPage() {
 						buildings={buildings.map(building => ({
 							id: building._id,
 							name: building.title,
-							location: building.address || '위치 정보 없음',
+							location:
+								building.address || t('dashboard.fallbacks.noLocation'),
 							alerts: 0,
 							...building,
 						}))}
@@ -207,7 +214,7 @@ export default function CompanyBuildingsPage() {
 			{/* Main Content */}
 			<main className='flex-1 flex flex-col h-full overflow-hidden'>
 				{/* Mobile Building Selector */}
-				<div className='md:hidden p-4 border-b border-border shrink-0'>
+				<div className='md:hidden pb-4 border-b border-border shrink-0'>
 					<label className='text-xs text-muted-foreground mb-1.5 block'>
 						{t('dashboard.buildingsScrollbar.mobileAction')}
 					</label>
@@ -252,7 +259,7 @@ export default function CompanyBuildingsPage() {
 
 				{/* Scrollable Content */}
 				<ScrollArea className='flex-1'>
-					<div className='p-3 sm:p-4 lg:p-6'>
+					<div className=' lg:p-6'>
 						<div className='max-w-4xl mx-auto'>
 							<AnimatePresence mode='wait'>
 								<motion.div
@@ -279,7 +286,7 @@ export default function CompanyBuildingsPage() {
 													{selectedBuilding.title}
 												</h1>
 												<p className='text-sm text-muted-foreground mt-1'>
-													실시간 건물 모니터링 대시보드
+													{t('dashboard.header.buildingSubtitle')}
 												</p>
 											</div>
 										</div>
@@ -297,10 +304,10 @@ export default function CompanyBuildingsPage() {
 										<div className='flex md:items-center justify-between max-sm:flex-col'>
 											<div>
 												<h2 className='font-semibold text-foreground'>
-													빠른 작업
+													{t('dashboard.quickActions.title')}
 												</h2>
 												<p className='text-xs text-muted-foreground mt-0.5'>
-													회사 관리 작업을 수행하세요
+													{t('dashboard.quickActions.description')}
 												</p>
 											</div>
 											<div className='grid grid-cols-5 max-sm:grid-cols-2 gap-2'>
@@ -344,7 +351,7 @@ export default function CompanyBuildingsPage() {
 													}
 												>
 													<Link2 className='h-4 w-4' />
-													노드 등록
+													{t('pages.devices.title')}
 												</Button>
 											</div>
 										</div>
@@ -469,61 +476,6 @@ export default function CompanyBuildingsPage() {
 				title={carouselModal.title}
 				initialIndex={carouselModal.initialIndex}
 			/>
-		</div>
-	)
-}
-
-// Stats Bar - Responsive
-function StatsBar({
-	stats,
-}: {
-	stats: {
-		totalNodesCount: number
-		onlineNodesCount: number
-		totalGatewaysCounts: number
-		totalWorkersCount: number
-	}
-}) {
-	const statItems = [
-		{
-			label: 'Total Nodes',
-			value: stats.totalNodesCount,
-			accent: 'text-foreground',
-		},
-		{
-			label: 'Online',
-			value: stats.onlineNodesCount,
-			accent: 'text-green-500',
-		},
-		{
-			label: 'Gateways',
-			value: stats.totalGatewaysCounts,
-			accent: 'text-blue-500',
-		},
-		{
-			label: 'Workers',
-			value: stats.totalWorkersCount,
-			accent: 'text-amber-500',
-		},
-	]
-
-	return (
-		<div className='grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8'>
-			{statItems.map((stat, i) => (
-				<div
-					key={i}
-					className='bg-card/50 border border-border rounded-xl p-3 sm:p-4 text-center'
-				>
-					<p
-						className={`text-lg sm:text-xl lg:text-2xl font-bold ${stat.accent}`}
-					>
-						{stat.value}
-					</p>
-					<p className='text-[10px] sm:text-xs text-muted-foreground mt-0.5'>
-						{stat.label}
-					</p>
-				</div>
-			))}
 		</div>
 	)
 }

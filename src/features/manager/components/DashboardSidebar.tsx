@@ -27,9 +27,9 @@ const NAV_ITEMS = [
 		icon: LayoutDashboard,
 		path: '/manager/dashboard',
 	},
-	{ labelKey: 'Buildings', icon: Building2, path: '/manager/buildings' },
-	{ labelKey: 'Devices', icon: LayoutList, path: '/manager/devices' },
-	{ labelKey: 'Organizations', icon: Layers, path: '/manager/organizations' },
+	{ labelKey: 'nav.buildings', icon: Building2, path: '/manager/buildings' },
+	{ labelKey: 'nav.devices', icon: LayoutList, path: '/manager/devices' },
+	{ labelKey: 'nav.organizations', icon: Layers, path: '/manager/organizations' },
 ]
 
 export default function DashboardSidebar() {
@@ -96,7 +96,7 @@ export default function DashboardSidebar() {
 			<div className='w-full h-24 p-3 border-t border-border'>
 				<img
 					src={logoUrl}
-					alt={'Company logo'}
+					alt={t('common.companyLogo')}
 					className='w-full h-full object-cover'
 				/>
 			</div>

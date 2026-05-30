@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import NodesConnectionTabsSection from '../components/NodesConnectionPage'
 
 // Node types available
@@ -43,6 +44,8 @@ export function parseNodeNumbers(input: string): number[] {
 }
 
 export default function ManagerDevicesPage() {
+	const { t } = useTranslation()
+
 	return (
 		<motion.div
 			initial={{ opacity: 0 }}
@@ -53,10 +56,10 @@ export default function ManagerDevicesPage() {
 			<div className='border-b border-border bg-card'>
 				<div className='max-w-7xl mx-auto px-4 sm:px-6 py-6'>
 					<h1 className='text-xl sm:text-2xl font-bold text-foreground'>
-						장치 등록
+						{t('pages.devices.title')}
 					</h1>
 					<p className='text-sm text-muted-foreground mt-1'>
-						노드 및 게이트웨이를 시스템에 등록합니다.
+						{t('pages.devices.description')}
 					</p>
 				</div>
 			</div>
