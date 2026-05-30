@@ -201,8 +201,7 @@ export default function CompanyBuildingsPage() {
 						buildings={buildings.map(building => ({
 							id: building._id,
 							name: building.title,
-							location:
-								building.address || t('dashboard.fallbacks.noLocation'),
+							location: building.address || t('dashboard.fallbacks.noLocation'),
 							alerts: 0,
 							...building,
 						}))}
@@ -273,8 +272,27 @@ export default function CompanyBuildingsPage() {
 									<div className='mb-6 sm:mb-8 hidden md:flex md:items-start md:justify-between md:gap-6'>
 										<div className='flex items-start gap-4'>
 											{/* Building image placeholder */}
-											<div className='w-32 lg:w-40 h-16 lg:h-20 rounded-xl border border-border bg-card flex items-center justify-center overflow-hidden shrink-0'>
-												<Building2 className='h-8 w-8 lg:h-10 lg:w-10 text-muted-foreground' />
+											<div
+												onClick={() =>
+													openCarousel(
+														readyImageUrls.length ? readyImageUrls : [''],
+														`${selectedBuilding.title} — Ready View`,
+													)
+												}
+												className='w-40 h-20 rounded-xl border border-border bg-card flex items-center justify-center overflow-hidden shrink-0'
+											>
+												<img
+													src={readyImageUrls[0] || ''}
+													alt={`${selectedBuilding.title} ready image`}
+													className='w-full h-full object-cover'
+													onError={e => {
+														e.currentTarget.style.display = 'none'
+													}}
+												/>
+
+												{!readyImageUrls[0] && (
+													<Building2 className='h-10 w-10 text-muted-foreground' />
+												)}
 											</div>
 
 											<div>
