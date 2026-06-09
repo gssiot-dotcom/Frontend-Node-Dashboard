@@ -1,5 +1,6 @@
 import { queryKeys } from '@/shared/utils/queryKeys'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { adminBuildingsApi } from '../api/buildings.api'
 import type {
 	CreateBuildingForm,
@@ -246,13 +247,23 @@ export function useUpdateBuildingAlarmLevelMutation() {
 		mutationFn: (payload: UpdateBuildingAlarmLevelPayload) =>
 			adminBuildingsApi.updateBuildingAlarmLevel(payload),
 
-		onSuccess: (_, variables) => {
+		onSuccess: (data, variables) => {
+			showGatewayAlarmToast(data?.summary)
+
 			queryClient.invalidateQueries({
 				queryKey: companyBuildingDeviceQueryKeys.buildingNodesPage(
+					variables.companyId,
 					variables.buildingId,
 					variables.alarmType,
 				),
 			})
+		},
+		onError: error => {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: 'Failed to save alarm level',
+			)
 		},
 	})
 }
@@ -264,15 +275,59 @@ export function useManagerUpdateBuildingAlarmLevelMutation() {
 		mutationFn: (payload: UpdateBuildingAlarmLevelPayload) =>
 			adminBuildingsApi.updateManagerBuildingAlarmLevel(payload),
 
-		onSuccess: (_, variables) => {
+		onSuccess: (data, variables) => {
+			showGatewayAlarmToast(data?.summary)
+
 			queryClient.invalidateQueries({
 				queryKey: companyBuildingDeviceQueryKeys.buildingNodesPage(
+					variables.companyId,
 					variables.buildingId,
 					variables.alarmType,
 				),
 			})
+			queryClient.invalidateQueries({
+				queryKey: ['manager'],
+			})
+		},
+		onError: error => {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: 'Failed to save alarm level',
+			)
 		},
 	})
+}
+
+function showGatewayAlarmToast(summary?: {
+	successCount: number
+	errorCount: number
+	timeoutCount: number
+}) {
+	const message = formatGatewayAlarmResult(summary)
+
+	if (summary?.errorCount || summary?.timeoutCount) {
+		toast.warning(message)
+		return
+	}
+
+	toast.success(message)
+}
+
+function formatGatewayAlarmResult(summary?: {
+	successCount: number
+	errorCount: number
+	timeoutCount: number
+}) {
+	if (!summary) return 'Alarm level saved successfully'
+
+	const parts = [
+		`${summary.successCount} success`,
+		summary.errorCount ? `${summary.errorCount} error` : '',
+		summary.timeoutCount ? `${summary.timeoutCount} timeout` : '',
+	].filter(Boolean)
+
+	return `Alarm setting result: ${parts.join(', ')}`
 }
 
 export function useNodeGraphicDataQuery(params: {

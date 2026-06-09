@@ -12,6 +12,7 @@ import type {
 	CreateBuildingForm,
 	CreateWorkerPayload,
 	UpdateBuildingAlarmLevelPayload,
+	UpdateBuildingAlarmLevelResponse,
 	UpdateBuildingDto,
 } from '../types/building.types'
 import { NodeTypes } from '../types/node.types'
@@ -174,12 +175,18 @@ export const adminBuildingsApi = {
 
 	updateBuildingAlarmLevel: async ({
 		buildingId,
+		gatewayId,
+		enabled,
 		alarmType,
 		levels,
 	}: UpdateBuildingAlarmLevelPayload) => {
-		const response = await request.patch(
+		const response = await request.patch<
+			ApiResponse<UpdateBuildingAlarmLevelResponse>
+		>(
 			`/admin/buildings/${buildingId}/alarm-level`,
 			{
+				gatewayId,
+				enabled,
 				alarmType,
 				green: levels.caution,
 				yellow: levels.warning,
@@ -187,17 +194,23 @@ export const adminBuildingsApi = {
 			},
 		)
 
-		return response.data
+		return response.data.data
 	},
 
 	updateManagerBuildingAlarmLevel: async ({
 		buildingId,
+		gatewayId,
+		enabled,
 		alarmType,
 		levels,
 	}: UpdateBuildingAlarmLevelPayload) => {
-		const response = await request.patch(
+		const response = await request.patch<
+			ApiResponse<UpdateBuildingAlarmLevelResponse>
+		>(
 			`/manager/buildings/${buildingId}/alarm-level`,
 			{
+				gatewayId,
+				enabled,
 				alarmType,
 				green: levels.caution,
 				yellow: levels.warning,
@@ -205,6 +218,6 @@ export const adminBuildingsApi = {
 			},
 		)
 
-		return response.data
+		return response.data.data
 	},
 }

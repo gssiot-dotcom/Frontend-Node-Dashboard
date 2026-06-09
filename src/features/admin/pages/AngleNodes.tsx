@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import AlarmLevelSettings, {
 	AlarmLevels,
 } from '@/features/manager/components/AlarmLevelSetting'
+import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
 
 import NodeGraphicModal from '@/components/NodegraphicModal'
@@ -17,7 +18,6 @@ import { Activity, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
-import BuildingPlanLocationModal from '../components/BuildingPlanLocationModal'
 import {
 	useBuildingNodesPageQuery,
 	useUpdateBuildingAlarmLevelMutation,
@@ -52,6 +52,12 @@ function getGatewayLabel(gatewayId: GatewayRef) {
 	return gatewayId.serialNumber || gatewayId._id
 }
 
+function getGatewayId(gatewayId: GatewayRef) {
+	if (!gatewayId) return ''
+	if (typeof gatewayId === 'string') return gatewayId
+	return gatewayId._id
+}
+
 function mapApiNodeToAngleCardData(node: AngleNode): AngleNodeNodeUi {
 	const x = node.angleX ?? 0
 	const y = node.angleY ?? 0
@@ -75,6 +81,7 @@ export default function AdminAngleNodesPage() {
 	const [search, setSearch] = useState('')
 	const [statusFilter, setStatusFilter] =
 		useState<(typeof STATUS_FILTERS)[number]['value']>('all')
+	const [gatewayFilter, setGatewayFilter] = useState('all')
 	const [graphicNode, setGraphicNode] = useState<AngleNodeNodeUi | null>(null)
 	const [latestGraphicPoint, setLatestGraphicPoint] =
 		useState<GangformPayload | null>(null)
@@ -98,8 +105,7 @@ export default function AdminAngleNodesPage() {
 	const buildingPlanImageUrls = state.buildingPlanImageUrls || []
 
 	// Bu page doim angle-node uchun.
-	// State bo‘lmasa ham direct refresh holatida fallback ishlaydi.
-	const nodeType = state.nodeType || 'angle_node'
+	const nodeType: NodeTypes = 'angle_node'
 
 	const { data, isLoading, isError } = useBuildingNodesPageQuery({
 		companyId,
@@ -112,6 +118,7 @@ export default function AdminAngleNodesPage() {
 		[data?.nodesList],
 	)
 	const gatewayList = data?.gatewayList ?? []
+	const gatewayAlarmSettings = data?.gatewayAlarmSettings ?? []
 	const buildingAlarmLevel = data?.buildingAlarmLevel ?? null
 
 	const [angleNodes, setAngleNodes] = useState<AngleNode[]>([])
@@ -147,10 +154,13 @@ export default function AdminAngleNodesPage() {
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
+			const matchesGateway =
+				gatewayFilter === 'all' ||
+				getGatewayId(node.gatewayId) === gatewayFilter
 
-			return matchesSearch && matchesStatus
+			return matchesSearch && matchesStatus && matchesGateway
 		})
-	}, [nodesWithUi, search, statusFilter])
+	}, [nodesWithUi, search, statusFilter, gatewayFilter])
 
 	const counts = {
 		all: nodesWithUi.length,
@@ -281,6 +291,7 @@ export default function AdminAngleNodesPage() {
 						isSaving={isAlarmLevelSaving}
 						onSave={levels => {
 							updateAlarmLevel({
+								companyId,
 								buildingId,
 								alarmType: nodeType,
 								levels,
@@ -310,15 +321,32 @@ export default function AdminAngleNodesPage() {
 						</Button>
 					))}
 
+					<GatewayAlarmControls
+						gateways={gatewayList}
+						settings={gatewayAlarmSettings}
+						buildingId={buildingId}
+						alarmType={nodeType}
+						alarmLevels={alarmLevels}
+						selectedGatewayId={gatewayFilter}
+						isSaving={isAlarmLevelSaving}
+						onSelectGateway={setGatewayFilter}
+						onToggleGateway={payload =>
+							updateAlarmLevel({
+								...payload,
+								companyId,
+							})
+						}
+					/>
+
 					<div className='ml-auto shrink-0 max-sm:hidden flex items-center gap-2'>
-						<Button
+						{/* <Button
 							variant='outline'
 							size='sm'
 							onClick={() => setLocationModalOpen(true)}
 							className='h-7 text-xs'
 						>
 							{t('nodePages.setPlanPhoto')}
-						</Button>
+						</Button> */}
 
 						<AlarmLevelSettings
 							value={alarmLevels}
@@ -327,6 +355,7 @@ export default function AdminAngleNodesPage() {
 							isSaving={isAlarmLevelSaving}
 							onSave={levels => {
 								updateAlarmLevel({
+									companyId,
 									buildingId,
 									alarmType: nodeType,
 									levels,
@@ -386,14 +415,14 @@ export default function AdminAngleNodesPage() {
 					}
 				/>
 
-				<BuildingPlanLocationModal
+				{/* <BuildingPlanLocationModal
 					isOpen={locationModalOpen}
 					onClose={() => setLocationModalOpen(false)}
 					buildingId={buildingId}
 					nodeType={nodeType}
 					nodes={nodesList}
 					planImageUrls={buildingPlanImageUrls}
-				/>
+				/> */}
 			</motion.div>
 		</div>
 	)

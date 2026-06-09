@@ -8,9 +8,11 @@ import {
 	GatewayRef,
 	NodeTypes,
 } from '@/features/admin/types/node.types'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import AlarmLevelSettings, {
 	AlarmLevels,
 } from '@/features/manager/components/AlarmLevelSetting'
+import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 import { useRealtimeRoom } from '@/hooks/useRealTime'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
 import { motion } from 'framer-motion'
@@ -59,6 +61,12 @@ function getGatewayLabel(gatewayId: GatewayRef) {
 	return gatewayId.serialNumber || gatewayId._id
 }
 
+function getGatewayId(gatewayId: GatewayRef) {
+	if (!gatewayId) return ''
+	if (typeof gatewayId === 'string') return gatewayId
+	return gatewayId._id
+}
+
 function getGatewaySearchText(gatewayId: GatewayRef) {
 	if (!gatewayId) return ''
 
@@ -94,6 +102,7 @@ export default function VerticalNodes() {
 	const [search, setSearch] = useState('')
 	const [statusFilter, setStatusFilter] =
 		useState<(typeof STATUS_FILTERS)[number]['value']>('all')
+	const [gatewayFilter, setGatewayFilter] = useState('all')
 	const [nodesWithUi, setNodesWithUi] = useState<GangformNodeUi[]>([])
 	const [graphicNode, setGraphicNode] = useState<GangformNodeUi | null>(null)
 	const [latestGraphicPoint, setLatestGraphicPoint] =
@@ -113,9 +122,8 @@ export default function VerticalNodes() {
 	const state = (location.state || {}) as NodePageState
 	const buildingId = state.buildingId || (params.buildingId as string)
 
-	// Bu page doim vertical-node uchun.
-	// State bo‘lmasa ham refresh/direct URL holatida ishlashi uchun fallback.
-	const nodeType = state.nodeType || 'gangform_node'
+	// Bu page doim gangform-node uchun.
+	const nodeType: NodeTypes = 'gangform_node'
 
 	const { data, isLoading, isError } = useManagerBuildingNodesPage(
 		buildingId,
@@ -127,6 +135,7 @@ export default function VerticalNodes() {
 		[data?.nodesList],
 	)
 	const gatewayList = data?.gatewayList ?? []
+	const gatewayAlarmSettings = data?.gatewayAlarmSettings ?? []
 	const buildingAlarmLevel = data?.buildingAlarmLevel ?? null
 
 	// nodesList o'zgarganda initialize qilamiz
@@ -149,6 +158,12 @@ export default function VerticalNodes() {
 		const keyword = search.toLowerCase().trim()
 
 		return nodesWithUi.filter(node => {
+			const locationText = formatNodeLocation(
+				node.installedLocation,
+				node.installedLocationTitle,
+				'',
+			).toLowerCase()
+
 			const matchesSearch =
 				!keyword ||
 				node.name.toLowerCase().includes(keyword) ||
@@ -156,14 +171,16 @@ export default function VerticalNodes() {
 				String(node.number).includes(keyword) ||
 				node.nodeType.toLowerCase().includes(keyword) ||
 				getGatewaySearchText(node.gatewayId).toLowerCase().includes(keyword) ||
-				(node.installedLocation || '').toLowerCase().includes(keyword)
+				locationText.includes(keyword)
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
+			const matchesGateway =
+				gatewayFilter === 'all' || getGatewayId(node.gatewayId) === gatewayFilter
 
-			return matchesSearch && matchesStatus
+			return matchesSearch && matchesStatus && matchesGateway
 		})
-	}, [nodesWithUi, search, statusFilter])
+	}, [nodesWithUi, search, statusFilter, gatewayFilter])
 
 	const counts = {
 		all: nodesWithUi.length,
@@ -346,6 +363,18 @@ export default function VerticalNodes() {
 							</span>
 						</Button>
 					))}
+
+					<GatewayAlarmControls
+						gateways={gatewayList}
+						settings={gatewayAlarmSettings}
+						buildingId={buildingId}
+						alarmType={nodeType}
+						alarmLevels={alarmLevels}
+						selectedGatewayId={gatewayFilter}
+						isSaving={isAlarmLevelSaving}
+						onSelectGateway={setGatewayFilter}
+						onToggleGateway={updateAlarmLevel}
+					/>
 
 					<div className='ml-auto shrink-0 max-sm:hidden'>
 						<AlarmLevelSettings

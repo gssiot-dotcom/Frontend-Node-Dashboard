@@ -43,7 +43,11 @@ import {
 	useRegisterCompanyNodesToGatewayMutation,
 	useUnassignCompanyNodesMutation,
 } from '../hooks/useDevice'
-import { DeviceGateway, DeviceNode } from '../types/device.types'
+import {
+	DeviceGateway,
+	DeviceNode,
+	DeviceNodeLocation,
+} from '../types/device.types'
 
 function getNodeTypeLabel(type: string) {
 	return NODE_TYPES.find(t => t.value === type)?.label || type
@@ -89,6 +93,27 @@ function getAssignedBadge(isAssigned: boolean) {
 			{isAssigned ? '활성' : '비활성'}
 		</span>
 	)
+}
+
+function formatNodeLocation(
+	location: DeviceNodeLocation,
+	locationTitle?: string | null,
+) {
+	if (locationTitle?.trim()) return locationTitle
+	if (!location) return '-'
+	if (typeof location === 'string') return location || '-'
+
+	const { planImageIndex, xPercent, yPercent } = location
+	const hasCoordinates =
+		typeof xPercent === 'number' && typeof yPercent === 'number'
+
+	if (!hasCoordinates) return '-'
+
+	const planNumber =
+		typeof planImageIndex === 'number' ? planImageIndex + 1 : null
+	const coordinateLabel = `${xPercent.toFixed(1)}%, ${yPercent.toFixed(1)}%`
+
+	return planNumber ? `Plan ${planNumber} (${coordinateLabel})` : coordinateLabel
 }
 type LocationState = {
 	companyId: string
@@ -852,7 +877,10 @@ function NodesConnectionTabsSection() {
 												<TableCell>{getStatusBadge(node.status)}</TableCell>
 
 												<TableCell className='text-xs text-muted-foreground'>
-													{node.installedLocation || '-'}
+													{formatNodeLocation(
+														node.installedLocation,
+														node.installedLocationTitle,
+													)}
 												</TableCell>
 											</TableRow>
 										))}

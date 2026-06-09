@@ -12,6 +12,7 @@ import {
 import AlarmLevelSettings, {
 	AlarmLevels,
 } from '@/features/manager/components/AlarmLevelSetting'
+import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
 
 import NodeGraphicModal from '@/components/NodegraphicModal'
@@ -61,6 +62,12 @@ function getGatewayLabel(gatewayId: GatewayRef) {
 	return gatewayId.serialNumber || gatewayId._id
 }
 
+function getGatewayId(gatewayId: GatewayRef) {
+	if (!gatewayId) return ''
+	if (typeof gatewayId === 'string') return gatewayId
+	return gatewayId._id
+}
+
 function mapApiNodeToAngleCardData(node: AngleNode): AngleNodeNodeUi {
 	const x = node.angleX ?? 0
 	const y = node.angleY ?? 0
@@ -84,6 +91,7 @@ export default function AdminAngleNodesPage() {
 	const [search, setSearch] = useState('')
 	const [statusFilter, setStatusFilter] =
 		useState<(typeof STATUS_FILTERS)[number]['value']>('all')
+	const [gatewayFilter, setGatewayFilter] = useState('all')
 	const [graphicNode, setGraphicNode] = useState<AngleNodeNodeUi | null>(null)
 	const [latestGraphicPoint, setLatestGraphicPoint] =
 		useState<GangformPayload | null>(null)
@@ -104,8 +112,7 @@ export default function AdminAngleNodesPage() {
 	const buildingId = state.buildingId || (params.buildingId as string)
 
 	// Bu page doim angle-node uchun.
-	// State bo‘lmasa ham direct refresh holatida fallback ishlaydi.
-	const nodeType = state.nodeType || 'angle_node'
+	const nodeType: NodeTypes = 'angle_node'
 
 	const { data, isLoading, isError } = useManagerBuildingNodesPage(
 		buildingId,
@@ -117,6 +124,7 @@ export default function AdminAngleNodesPage() {
 		[data?.nodesList],
 	)
 	const gatewayList = data?.gatewayList ?? []
+	const gatewayAlarmSettings = data?.gatewayAlarmSettings ?? []
 	const buildingAlarmLevel = data?.buildingAlarmLevel ?? null
 
 	const [angleNodes, setAngleNodes] = useState<AngleNode[]>([])
@@ -152,10 +160,12 @@ export default function AdminAngleNodesPage() {
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
+			const matchesGateway =
+				gatewayFilter === 'all' || getGatewayId(node.gatewayId) === gatewayFilter
 
-			return matchesSearch && matchesStatus
+			return matchesSearch && matchesStatus && matchesGateway
 		})
-	}, [nodesWithUi, search, statusFilter])
+	}, [nodesWithUi, search, statusFilter, gatewayFilter])
 
 	const counts = {
 		all: nodesWithUi.length,
@@ -314,6 +324,18 @@ export default function AdminAngleNodesPage() {
 							</span>
 						</Button>
 					))}
+
+					<GatewayAlarmControls
+						gateways={gatewayList}
+						settings={gatewayAlarmSettings}
+						buildingId={buildingId}
+						alarmType={nodeType}
+						alarmLevels={alarmLevels}
+						selectedGatewayId={gatewayFilter}
+						isSaving={isAlarmLevelSaving}
+						onSelectGateway={setGatewayFilter}
+						onToggleGateway={updateAlarmLevel}
+					/>
 
 					<div className='ml-auto shrink-0 max-sm:hidden'>
 						<AlarmLevelSettings

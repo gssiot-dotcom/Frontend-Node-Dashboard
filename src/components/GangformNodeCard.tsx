@@ -4,6 +4,7 @@
  */
 
 import { GangformNodeUi } from '@/features/manager/pages/GangformNodes'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
 import { MapPinned, Wifi, WifiOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -86,7 +87,11 @@ export default function NodeCard({ node }: NodeCardProps) {
 			<div className='flex items-center gap-1 text-[10px] text-muted-foreground'>
 				<MapPinned className='w-3.5 h-3.5' />
 				<span className='font-medium'>
-					{node.installedLocation || t('verticalNodes.nodeCard.position')}
+					{formatNodeLocation(
+						node.installedLocation,
+						node.installedLocationTitle,
+						t('verticalNodes.nodeCard.position'),
+					)}
 				</span>
 			</div>
 		</div>

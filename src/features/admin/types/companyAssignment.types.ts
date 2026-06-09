@@ -29,12 +29,22 @@ export type AssignmentGateway = {
 
 type NodeType = 'gangform_node' | 'angle_node' | 'door_node'
 
+export type AssignmentNodeLocation =
+	| string
+	| {
+			planImageIndex?: number | null
+			xPercent?: number | null
+			yPercent?: number | null
+	  }
+	| null
+
 export type AssignmentNode = {
 	_id: string
 	number: number
 	nodeType: NodeType
 	status: NodeStatus
-	installedLocation: string
+	installedLocation: AssignmentNodeLocation
+	installedLocationTitle?: string | null
 	companyId: string | null
 	gatewayId: string | null
 	isAssigned: boolean

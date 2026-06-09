@@ -6,6 +6,7 @@ import {
 	GatewayRef,
 	NodeTypes,
 } from '@/features/admin/types/node.types'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import AlarmLevelSettings, {
 	AlarmLevels,
 } from '@/features/manager/components/AlarmLevelSetting'
@@ -155,6 +156,12 @@ export default function VerticalNodes() {
 		const keyword = search.toLowerCase().trim()
 
 		return nodesWithUi.filter(node => {
+			const locationText = formatNodeLocation(
+				node.installedLocation,
+				node.installedLocationTitle,
+				'',
+			).toLowerCase()
+
 			const matchesSearch =
 				!keyword ||
 				node.name.toLowerCase().includes(keyword) ||
@@ -162,7 +169,7 @@ export default function VerticalNodes() {
 				String(node.number).includes(keyword) ||
 				node.nodeType.toLowerCase().includes(keyword) ||
 				getGatewaySearchText(node.gatewayId).toLowerCase().includes(keyword) ||
-				(node.installedLocation || '').toLowerCase().includes(keyword)
+				locationText.includes(keyword)
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
