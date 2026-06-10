@@ -17,8 +17,10 @@ import NodeCard from '../../../components/GangformNodeCard'
 import NodeCardSkeleton from '../../../components/NodeCardSkeleton'
 import {
 	useBuildingNodesPageQuery,
+	useUpdateFaultFilterMutation,
 	useUpdateBuildingAlarmLevelMutation,
 } from '../hooks/useBuildings'
+import { GatewayAlarmSetting } from '../types/building.types'
 import { GangformNode, GatewayRef, NodeTypes } from '../types/node.types'
 
 export interface GangformPayload {
@@ -71,6 +73,17 @@ function getGatewayId(gatewayId: GatewayRef) {
 	if (!gatewayId) return ''
 	if (typeof gatewayId === 'string') return gatewayId
 	return gatewayId._id
+}
+
+function getFaultFilterNodes(
+	settings: GatewayAlarmSetting[],
+	gatewayId: string,
+	nodeType: NodeTypes,
+) {
+	const settingPath = nodeType === 'angle_node' ? 'angle' : 'vertical'
+	const setting = settings.find(item => String(item.gatewayId) === gatewayId)
+
+	return setting?.[settingPath]?.faultFilterNodes ?? []
 }
 
 function getGatewaySearchText(gatewayId: GatewayRef) {
@@ -223,6 +236,8 @@ export default function VerticalNodes() {
 
 	const { mutate: updateAlarmLevel, isPending: isAlarmLevelSaving } =
 		useUpdateBuildingAlarmLevelMutation()
+	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
+		useUpdateFaultFilterMutation()
 
 	// realtime handler — backenddan kelgan status ishlatiladi
 	const handleVerticalRealtime = useCallback((sensorData: GangformPayload) => {
@@ -454,6 +469,27 @@ export default function VerticalNodes() {
 					nodeType='gangform_node'
 					nodeName={graphicNode?.name}
 					alarmLevels={alarmLevels}
+					faultFilter={
+						graphicNode && getGatewayId(graphicNode.gatewayId)
+							? {
+									enabled: getFaultFilterNodes(
+										gatewayAlarmSettings,
+										getGatewayId(graphicNode.gatewayId),
+										nodeType,
+									).includes(graphicNode.number),
+									isSaving: isFaultFilterSaving,
+									onToggle: enabled =>
+										updateFaultFilter({
+											companyId,
+											buildingId,
+											gatewayId: getGatewayId(graphicNode.gatewayId),
+											alarmType: nodeType,
+											nodeNumber: graphicNode.number,
+											enabled,
+										}),
+								}
+							: undefined
+					}
 					livePoint={
 						graphicNode && latestGraphicPoint?.nodeNumber === graphicNode.number
 							? latestGraphicPoint

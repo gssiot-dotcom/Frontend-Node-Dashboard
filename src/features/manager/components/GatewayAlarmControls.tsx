@@ -13,14 +13,15 @@ import {
 	HoverCardContent,
 	HoverCardTrigger,
 } from '@/components/ui/hover-card'
+import SwitchButton from '@/components/ui/switch-button'
 import {
 	GatewayAlarmSetting,
 	UpdateBuildingAlarmLevelPayload,
 } from '@/features/admin/types/building.types'
 import { Gateway } from '@/features/admin/types/gateway.types'
 import { NodeTypes } from '@/features/admin/types/node.types'
-import { cn } from '@/lib/utils'
 import { Check, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { AlarmLevels } from './AlarmLevelSetting'
 
 type Props = {
@@ -65,6 +66,8 @@ export default function GatewayAlarmControls({
 	onSelectGateway,
 	onToggleGateway,
 }: Props) {
+	const { t } = useTranslation()
+
 	if (!gateways.length) return null
 
 	const selectedGateway = gateways.find(
@@ -149,28 +152,12 @@ export default function GatewayAlarmControls({
 				<HoverCard openDelay={200} closeDelay={100}>
 					<HoverCardTrigger asChild>
 						<span className='inline-flex'>
-							<button
-								type='button'
-								role='switch'
-								aria-checked={selectedGatewayEnabled}
-								aria-label='Toggle selected gateway alarm'
+							<SwitchButton
+								checked={selectedGatewayEnabled}
 								disabled={toggleDisabled}
-								onClick={() => updateSelectedGateway(!selectedGatewayEnabled)}
-								className={cn(
-									'relative inline-flex h-7 w-14 shrink-0 items-center rounded-full border transition-colors disabled:cursor-not-allowed',
-									selectedGatewayEnabled
-										? 'bg-primary'
-										: 'border-border bg-muted-foreground/20',
-								)}
-							>
-								<span
-									aria-hidden='true'
-									className={cn(
-										'pointer-events-none h-5 w-5 rounded-full border-border bg-background shadow-sm transition-transform',
-										selectedGatewayEnabled ? 'translate-x-8' : 'translate-x-1',
-									)}
-								/>
-							</button>
+								ariaLabel='Toggle selected gateway alarm'
+								onCheckedChange={updateSelectedGateway}
+							/>
 						</span>
 					</HoverCardTrigger>
 					<HoverCardContent
@@ -179,7 +166,7 @@ export default function GatewayAlarmControls({
 						sideOffset={8}
 						className='w-48 rounded-md p-2 text-xs leading-snug text-muted-foreground'
 					>
-						Turn alarm sending on or off for the selected gateway.
+						{t('nodePages.controls.gatewayAlarmDescription')}
 					</HoverCardContent>
 				</HoverCard>
 

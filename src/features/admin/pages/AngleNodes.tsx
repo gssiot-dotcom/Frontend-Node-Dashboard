@@ -20,8 +20,10 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
 import {
 	useBuildingNodesPageQuery,
+	useUpdateFaultFilterMutation,
 	useUpdateBuildingAlarmLevelMutation,
 } from '../hooks/useBuildings'
+import { GatewayAlarmSetting } from '../types/building.types'
 import { AngleNode, GatewayRef, NodeTypes } from '../types/node.types'
 import { GangformPayload } from './GangformNodes'
 
@@ -56,6 +58,17 @@ function getGatewayId(gatewayId: GatewayRef) {
 	if (!gatewayId) return ''
 	if (typeof gatewayId === 'string') return gatewayId
 	return gatewayId._id
+}
+
+function getFaultFilterNodes(
+	settings: GatewayAlarmSetting[],
+	gatewayId: string,
+	nodeType: NodeTypes,
+) {
+	const settingPath = nodeType === 'angle_node' ? 'angle' : 'vertical'
+	const setting = settings.find(item => String(item.gatewayId) === gatewayId)
+
+	return setting?.[settingPath]?.faultFilterNodes ?? []
 }
 
 function mapApiNodeToAngleCardData(node: AngleNode): AngleNodeNodeUi {
@@ -175,6 +188,8 @@ export default function AdminAngleNodesPage() {
 
 	const { mutate: updateAlarmLevel, isPending: isAlarmLevelSaving } =
 		useUpdateBuildingAlarmLevelMutation()
+	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
+		useUpdateFaultFilterMutation()
 
 	// realtime handler
 	const handleAngleRealtime = useCallback((sensorData: GangformPayload) => {
@@ -408,6 +423,27 @@ export default function AdminAngleNodesPage() {
 					nodeType='angle_node'
 					nodeName={graphicNode?.name}
 					alarmLevels={alarmLevels}
+					faultFilter={
+						graphicNode && getGatewayId(graphicNode.gatewayId)
+							? {
+									enabled: getFaultFilterNodes(
+										gatewayAlarmSettings,
+										getGatewayId(graphicNode.gatewayId),
+										nodeType,
+									).includes(graphicNode.number),
+									isSaving: isFaultFilterSaving,
+									onToggle: enabled =>
+										updateFaultFilter({
+											companyId,
+											buildingId,
+											gatewayId: getGatewayId(graphicNode.gatewayId),
+											alarmType: nodeType,
+											nodeNumber: graphicNode.number,
+											enabled,
+										}),
+								}
+							: undefined
+					}
 					livePoint={
 						graphicNode && latestGraphicPoint?.nodeNumber === graphicNode.number
 							? latestGraphicPoint

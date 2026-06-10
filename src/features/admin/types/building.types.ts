@@ -155,3 +155,19 @@ export type UpdateBuildingAlarmLevelPayload = {
 	alarmType: AlarmType
 	levels: AlarmLevels
 }
+
+export type UpdateFaultFilterResponse = {
+	faultFilterNodes: number[]
+	gatewayResults: GatewayAlarmResult[]
+	summary: GatewayAlarmSummary
+}
+
+export type UpdateFaultFilterPayload = {
+	companyId?: string
+	buildingId: string
+	gatewayId: string
+	alarmType: AlarmType
+	nodeNumber?: number
+	enabled?: boolean
+	nodes?: number[]
+}

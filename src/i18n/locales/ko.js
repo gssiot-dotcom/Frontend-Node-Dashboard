@@ -215,6 +215,13 @@ export default {
 		countSummary: '{{shown}} / {{total}}개 노드',
 		gatewaysSummary: '게이트웨이: {{count}}개',
 		setPlanPhoto: '도면 사진 설정',
+		controls: {
+			faultFilterLabel: 'Fault Filter 추가',
+			faultFilterDescription:
+				'이 노드를 게이트웨이의 알람 누락 노드 목록에 추가합니다.',
+			gatewayAlarmDescription:
+				'선택한 게이트웨이의 알람 전송을 켜거나 끕니다.',
+		},
 	},
 
 	pages: {

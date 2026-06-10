@@ -6,6 +6,7 @@ import type {
 	CreateBuildingForm,
 	UpdateBuildingAlarmLevelPayload,
 	UpdateBuildingDto,
+	UpdateFaultFilterPayload,
 } from '../types/building.types'
 import { NodeTypes } from '../types/node.types'
 
@@ -299,6 +300,65 @@ export function useManagerUpdateBuildingAlarmLevelMutation() {
 	})
 }
 
+export function useUpdateFaultFilterMutation() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (payload: UpdateFaultFilterPayload) =>
+			adminBuildingsApi.updateFaultFilter(payload),
+
+		onSuccess: (data, variables) => {
+			showGatewayCommandToast(data?.summary, 'Fault filter')
+
+			queryClient.invalidateQueries({
+				queryKey: companyBuildingDeviceQueryKeys.buildingNodesPage(
+					variables.companyId,
+					variables.buildingId,
+					variables.alarmType,
+				),
+			})
+		},
+		onError: error => {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: 'Failed to update fault filter',
+			)
+		},
+	})
+}
+
+export function useManagerUpdateFaultFilterMutation() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (payload: UpdateFaultFilterPayload) =>
+			adminBuildingsApi.updateManagerFaultFilter(payload),
+
+		onSuccess: (data, variables) => {
+			showGatewayCommandToast(data?.summary, 'Fault filter')
+
+			queryClient.invalidateQueries({
+				queryKey: companyBuildingDeviceQueryKeys.buildingNodesPage(
+					variables.companyId,
+					variables.buildingId,
+					variables.alarmType,
+				),
+			})
+			queryClient.invalidateQueries({
+				queryKey: ['manager'],
+			})
+		},
+		onError: error => {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: 'Failed to update fault filter',
+			)
+		},
+	})
+}
+
 function showGatewayAlarmToast(summary?: {
 	successCount: number
 	errorCount: number
@@ -328,6 +388,47 @@ function formatGatewayAlarmResult(summary?: {
 	].filter(Boolean)
 
 	return `Alarm setting result: ${parts.join(', ')}`
+}
+
+function showGatewayCommandToast(
+	summary:
+		| {
+				successCount: number
+				errorCount: number
+				timeoutCount: number
+		  }
+		| undefined,
+	label: string,
+) {
+	const message = formatGatewayCommandResult(summary, label)
+
+	if (summary?.errorCount || summary?.timeoutCount) {
+		toast.warning(message)
+		return
+	}
+
+	toast.success(message)
+}
+
+function formatGatewayCommandResult(
+	summary:
+		| {
+				successCount: number
+				errorCount: number
+				timeoutCount: number
+		  }
+		| undefined,
+	label: string,
+) {
+	if (!summary) return `${label} updated successfully`
+
+	const parts = [
+		`${summary.successCount} success`,
+		summary.errorCount ? `${summary.errorCount} error` : '',
+		summary.timeoutCount ? `${summary.timeoutCount} timeout` : '',
+	].filter(Boolean)
+
+	return `${label} result: ${parts.join(', ')}`
 }
 
 export function useNodeGraphicDataQuery(params: {

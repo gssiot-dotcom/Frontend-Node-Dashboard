@@ -16,8 +16,12 @@ import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmCont
 import { mapTiltToUiState } from '@/lib/TiltMapper'
 
 import NodeGraphicModal from '@/components/NodegraphicModal'
-import { useManagerUpdateBuildingAlarmLevelMutation } from '@/features/admin/hooks/useBuildings'
+import {
+	useManagerUpdateBuildingAlarmLevelMutation,
+	useManagerUpdateFaultFilterMutation,
+} from '@/features/admin/hooks/useBuildings'
 import { GangformPayload } from '@/features/admin/pages/GangformNodes'
+import { GatewayAlarmSetting } from '@/features/admin/types/building.types'
 import { useRealtimeRoom } from '@/hooks/useRealTime'
 import { motion } from 'framer-motion'
 import { Activity, Search } from 'lucide-react'
@@ -66,6 +70,17 @@ function getGatewayId(gatewayId: GatewayRef) {
 	if (!gatewayId) return ''
 	if (typeof gatewayId === 'string') return gatewayId
 	return gatewayId._id
+}
+
+function getFaultFilterNodes(
+	settings: GatewayAlarmSetting[],
+	gatewayId: string,
+	nodeType: NodeTypes,
+) {
+	const settingPath = nodeType === 'angle_node' ? 'angle' : 'vertical'
+	const setting = settings.find(item => String(item.gatewayId) === gatewayId)
+
+	return setting?.[settingPath]?.faultFilterNodes ?? []
 }
 
 function mapApiNodeToAngleCardData(node: AngleNode): AngleNodeNodeUi {
@@ -178,6 +193,8 @@ export default function AdminAngleNodesPage() {
 
 	const { mutate: updateAlarmLevel, isPending: isAlarmLevelSaving } =
 		useManagerUpdateBuildingAlarmLevelMutation()
+	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
+		useManagerUpdateFaultFilterMutation()
 
 	// realtime handler
 	const handleAngleRealtime = useCallback((sensorData: GangformPayload) => {
@@ -397,6 +414,26 @@ export default function AdminAngleNodesPage() {
 					nodeType='angle_node'
 					nodeName={graphicNode?.name}
 					alarmLevels={alarmLevels}
+					faultFilter={
+						graphicNode && getGatewayId(graphicNode.gatewayId)
+							? {
+									enabled: getFaultFilterNodes(
+										gatewayAlarmSettings,
+										getGatewayId(graphicNode.gatewayId),
+										nodeType,
+									).includes(graphicNode.number),
+									isSaving: isFaultFilterSaving,
+									onToggle: enabled =>
+										updateFaultFilter({
+											buildingId,
+											gatewayId: getGatewayId(graphicNode.gatewayId),
+											alarmType: nodeType,
+											nodeNumber: graphicNode.number,
+											enabled,
+										}),
+								}
+							: undefined
+					}
 					livePoint={
 						graphicNode && latestGraphicPoint?.nodeNumber === graphicNode.number
 							? latestGraphicPoint

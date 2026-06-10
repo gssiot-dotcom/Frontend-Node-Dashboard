@@ -215,6 +215,13 @@ export default {
 		countSummary: '{{shown}} of {{total}} nodes',
 		gatewaysSummary: 'Gateways: {{count}}',
 		setPlanPhoto: 'Set Plan Photo',
+		controls: {
+			faultFilterLabel: 'Add to fault filter',
+			faultFilterDescription:
+				"Add this node to the gateway's missing-alarm node list.",
+			gatewayAlarmDescription:
+				'Turn alarm sending on or off for the selected gateway.',
+		},
 	},
 
 	pages: {
