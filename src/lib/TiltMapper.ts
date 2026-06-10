@@ -1,5 +1,5 @@
 type NodeStatus = 'safe' | 'caution' | 'warning' | 'danger' | 'offline'
-type LedPosition = 'center' | 'top' | 'bottom' | 'left' | 'right'
+type LedPosition = 'center' | 'up' | 'down' | 'left' | 'right'
 
 interface TiltUiState {
 	alertLevel: NodeStatus
@@ -35,11 +35,11 @@ export function mapTiltToUiState(
 	let activeLedPosition: LedPosition = 'center'
 
 	if (absY > absX) {
-		activeLedPosition = angleY > 0 ? 'top' : 'bottom'
+		activeLedPosition = angleY > 0 ? 'up' : 'down'
 	} else if (absX > absY) {
 		activeLedPosition = angleX > 0 ? 'right' : 'left'
 	} else if (absX !== 0 || absY !== 0) {
-		activeLedPosition = angleY >= 0 ? 'top' : 'bottom'
+		activeLedPosition = angleY >= 0 ? 'up' : 'down'
 	}
 
 	const uiByStatus = {
