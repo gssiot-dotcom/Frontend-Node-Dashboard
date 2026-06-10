@@ -4,8 +4,10 @@ import { Input } from '@/components/ui/input'
 import AlarmLevelSettings, {
 	AlarmLevels,
 } from '@/features/manager/components/AlarmLevelSetting'
+import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 import { useRealtimeRoom } from '@/hooks/useRealTime'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
+import { formatNodeLocation } from '../utils/format-node-location'
 import { motion } from 'framer-motion'
 import { Activity, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -15,8 +17,10 @@ import NodeCard from '../../../components/GangformNodeCard'
 import NodeCardSkeleton from '../../../components/NodeCardSkeleton'
 import {
 	useBuildingNodesPageQuery,
+	useUpdateFaultFilterMutation,
 	useUpdateBuildingAlarmLevelMutation,
 } from '../hooks/useBuildings'
+import { GatewayAlarmSetting } from '../types/building.types'
 import { GangformNode, GatewayRef, NodeTypes } from '../types/node.types'
 
 export interface GangformPayload {
@@ -65,6 +69,23 @@ function getGatewayLabel(gatewayId: GatewayRef) {
 	return gatewayId.serialNumber || gatewayId._id
 }
 
+function getGatewayId(gatewayId: GatewayRef) {
+	if (!gatewayId) return ''
+	if (typeof gatewayId === 'string') return gatewayId
+	return gatewayId._id
+}
+
+function getFaultFilterNodes(
+	settings: GatewayAlarmSetting[],
+	gatewayId: string,
+	nodeType: NodeTypes,
+) {
+	const settingPath = nodeType === 'angle_node' ? 'angle' : 'vertical'
+	const setting = settings.find(item => String(item.gatewayId) === gatewayId)
+
+	return setting?.[settingPath]?.faultFilterNodes ?? []
+}
+
 function getGatewaySearchText(gatewayId: GatewayRef) {
 	if (!gatewayId) return ''
 
@@ -100,6 +121,7 @@ export default function VerticalNodes() {
 	const [search, setSearch] = useState('')
 	const [statusFilter, setStatusFilter] =
 		useState<(typeof STATUS_FILTERS)[number]['value']>('all')
+	const [gatewayFilter, setGatewayFilter] = useState('all')
 	// 2. state 추가 (VerticalNodes 컴포넌트 안)
 	const [graphicNode, setGraphicNode] = useState<GangformNodeUi | null>(null)
 	const [latestGraphicPoint, setLatestGraphicPoint] =
@@ -121,9 +143,8 @@ export default function VerticalNodes() {
 	const companyId = state.companyId
 	const buildingId = state.buildingId || params.buildingId
 
-	// Bu page doim vertical-node uchun.
-	// State bo‘lmasa ham refresh/direct URL holatida ishlashi uchun fallback.
-	const nodeType = state.nodeType || 'gangform_node'
+	// Bu page doim gangform-node uchun.
+	const nodeType: NodeTypes = 'gangform_node'
 
 	const { data, isLoading, isError } = useBuildingNodesPageQuery({
 		companyId,
@@ -136,6 +157,7 @@ export default function VerticalNodes() {
 		[data?.nodesList],
 	)
 	const gatewayList = data?.gatewayList ?? []
+	const gatewayAlarmSettings = data?.gatewayAlarmSettings ?? []
 	const buildingAlarmLevel = data?.buildingAlarmLevel ?? null
 
 	// nodesList o'zgarganda initialize qilamiz
@@ -160,20 +182,28 @@ export default function VerticalNodes() {
 		const keyword = search.toLowerCase().trim()
 
 		return nodesWithUi.filter(node => {
+			const locationText = formatNodeLocation(
+				node.installedLocation,
+				node.installedLocationTitle,
+				'',
+			).toLowerCase()
+
 			const matchesSearch =
 				!keyword ||
 				node.name.toLowerCase().includes(keyword) ||
 				String(node.number).includes(keyword) ||
 				node.nodeType.toLowerCase().includes(keyword) ||
 				getGatewaySearchText(node.gatewayId).toLowerCase().includes(keyword) ||
-				(node.installedLocation || '').toLowerCase().includes(keyword)
+				locationText.includes(keyword)
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
+			const matchesGateway =
+				gatewayFilter === 'all' || getGatewayId(node.gatewayId) === gatewayFilter
 
-			return matchesSearch && matchesStatus
+			return matchesSearch && matchesStatus && matchesGateway
 		})
-	}, [nodesWithUi, search, statusFilter])
+	}, [nodesWithUi, search, statusFilter, gatewayFilter])
 
 	const counts = {
 		all: nodesWithUi.length,
@@ -206,6 +236,8 @@ export default function VerticalNodes() {
 
 	const { mutate: updateAlarmLevel, isPending: isAlarmLevelSaving } =
 		useUpdateBuildingAlarmLevelMutation()
+	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
+		useUpdateFaultFilterMutation()
 
 	// realtime handler — backenddan kelgan status ishlatiladi
 	const handleVerticalRealtime = useCallback((sensorData: GangformPayload) => {
@@ -328,6 +360,7 @@ export default function VerticalNodes() {
 						isSaving={isAlarmLevelSaving}
 						onSave={levels => {
 							updateAlarmLevel({
+								companyId,
 								buildingId,
 								alarmType: nodeType,
 								levels,
@@ -357,6 +390,23 @@ export default function VerticalNodes() {
 						</Button>
 					))}
 
+					<GatewayAlarmControls
+						gateways={gatewayList}
+						settings={gatewayAlarmSettings}
+						buildingId={buildingId}
+						alarmType={nodeType}
+						alarmLevels={alarmLevels}
+						selectedGatewayId={gatewayFilter}
+						isSaving={isAlarmLevelSaving}
+						onSelectGateway={setGatewayFilter}
+						onToggleGateway={payload =>
+							updateAlarmLevel({
+								...payload,
+								companyId,
+							})
+						}
+					/>
+
 					<div className='ml-auto shrink-0 max-sm:hidden'>
 						<AlarmLevelSettings
 							value={alarmLevels}
@@ -365,6 +415,7 @@ export default function VerticalNodes() {
 							isSaving={isAlarmLevelSaving}
 							onSave={levels => {
 								updateAlarmLevel({
+									companyId,
 									buildingId,
 									alarmType: nodeType,
 									levels,
@@ -418,6 +469,27 @@ export default function VerticalNodes() {
 					nodeType='gangform_node'
 					nodeName={graphicNode?.name}
 					alarmLevels={alarmLevels}
+					faultFilter={
+						graphicNode && getGatewayId(graphicNode.gatewayId)
+							? {
+									enabled: getFaultFilterNodes(
+										gatewayAlarmSettings,
+										getGatewayId(graphicNode.gatewayId),
+										nodeType,
+									).includes(graphicNode.number),
+									isSaving: isFaultFilterSaving,
+									onToggle: enabled =>
+										updateFaultFilter({
+											companyId,
+											buildingId,
+											gatewayId: getGatewayId(graphicNode.gatewayId),
+											alarmType: nodeType,
+											nodeNumber: graphicNode.number,
+											enabled,
+										}),
+								}
+							: undefined
+					}
 					livePoint={
 						graphicNode && latestGraphicPoint?.nodeNumber === graphicNode.number
 							? latestGraphicPoint

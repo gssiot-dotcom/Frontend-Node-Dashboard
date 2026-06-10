@@ -32,6 +32,7 @@ import {
 import { DeviceGateway, DeviceNode } from '@/features/admin/types/device.types'
 import { GATEWAY_TYPES } from '@/features/admin/types/gateway.types'
 import { NODE_TYPES } from '@/features/admin/types/node.types'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import { useMyCompany } from '@/features/manager/hooks/usemanagerCompany'
 import { parseNodeNumbers } from '@/features/manager/pages/Devices'
 import {
@@ -849,7 +850,11 @@ function NodesConnectionTabsSection() {
 												<TableCell>{getStatusBadge(node.status)}</TableCell>
 
 												<TableCell className='text-xs text-muted-foreground'>
-													{node.installedLocation || '-'}
+													{formatNodeLocation(
+														node.installedLocation,
+														node.installedLocationTitle,
+														'-',
+													)}
 												</TableCell>
 											</TableRow>
 										))}

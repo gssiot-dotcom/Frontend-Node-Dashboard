@@ -23,6 +23,15 @@ export interface DeviceGateway {
 	updatedAt: string
 }
 
+export type DeviceNodeLocation =
+	| string
+	| {
+			planImageIndex?: number | null
+			xPercent?: number | null
+			yPercent?: number | null
+	  }
+	| null
+
 export interface DeviceNode {
 	_id: string
 	id: string
@@ -37,8 +46,9 @@ export interface DeviceNode {
 	gatewaySerialNumber?: string
 
 	status: string
-	installedLocation: string
-	installLocationImg: string | null
+	installedLocation: DeviceNodeLocation
+	installedLocationTitle?: string | null
+	installLocationImg: DeviceNodeLocation
 
 	isAssigned: boolean
 

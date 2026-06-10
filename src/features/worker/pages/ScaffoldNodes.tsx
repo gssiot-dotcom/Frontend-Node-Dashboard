@@ -11,6 +11,7 @@ import {
 } from '@/features/admin/types/node.types'
 
 import { useRealtimeRoom } from '@/hooks/useRealTime'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import { motion } from 'framer-motion'
 import { DoorOpen, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -108,12 +109,18 @@ export default function ScaffoldingNodes() {
 		const keyword = search.toLowerCase().trim()
 
 		return nodesWithUi.filter(node => {
+			const locationText = formatNodeLocation(
+				node.installedLocation,
+				node.installedLocationTitle,
+				'',
+			).toLowerCase()
+
 			const matchesSearch =
 				!keyword ||
 				String(node.number).includes(keyword) ||
 				node.nodeType.toLowerCase().includes(keyword) ||
 				getGatewaySearchText(node.gatewayId).toLowerCase().includes(keyword) ||
-				(node.installedLocation || '').toLowerCase().includes(keyword)
+				locationText.includes(keyword)
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter

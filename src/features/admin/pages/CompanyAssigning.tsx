@@ -33,6 +33,7 @@ import {
 	AssignmentCompany,
 	AssignmentGateway,
 	AssignmentNode,
+	AssignmentNodeLocation,
 } from '../types/companyAssignment.types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -52,6 +53,27 @@ const NODE_TYPE_LABELS: Record<NodeType, string> = {
 	gangform_node: '수직 노드',
 	angle_node: '각도 노드',
 	door_node: '비계문 노드',
+}
+
+function formatNodeLocation(
+	location: AssignmentNodeLocation,
+	locationTitle?: string | null,
+) {
+	if (locationTitle?.trim()) return locationTitle
+	if (!location) return '-'
+	if (typeof location === 'string') return location || '-'
+
+	const { planImageIndex, xPercent, yPercent } = location
+	const hasCoordinates =
+		typeof xPercent === 'number' && typeof yPercent === 'number'
+
+	if (!hasCoordinates) return '-'
+
+	const planNumber =
+		typeof planImageIndex === 'number' ? planImageIndex + 1 : null
+	const coordinateLabel = `${xPercent.toFixed(1)}%, ${yPercent.toFixed(1)}%`
+
+	return planNumber ? `Plan ${planNumber} (${coordinateLabel})` : coordinateLabel
 }
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
@@ -340,10 +362,14 @@ function NodeTab({
 				if (assignedTypeFilter !== 'all' && n.nodeType !== assignedTypeFilter)
 					return false
 				const q = assignedSearch.toLowerCase()
+				const location = formatNodeLocation(
+					n.installedLocation,
+					n.installedLocationTitle,
+				).toLowerCase()
 				return (
 					!q ||
 					n.number.toString().includes(q) ||
-					n.installedLocation.toLowerCase().includes(q)
+					location.includes(q)
 				)
 			}),
 		[nodes, company._id, assignedTypeFilter, assignedSearch],
@@ -356,10 +382,14 @@ function NodeTab({
 				if (availableTypeFilter !== 'all' && n.nodeType !== availableTypeFilter)
 					return false
 				const q = availableSearch.toLowerCase()
+				const location = formatNodeLocation(
+					n.installedLocation,
+					n.installedLocationTitle,
+				).toLowerCase()
 				return (
 					!q ||
 					n.number.toString().includes(q) ||
-					n.installedLocation.toLowerCase().includes(q)
+					location.includes(q)
 				)
 			}),
 		[nodes, availableTypeFilter, availableSearch],
@@ -443,7 +473,10 @@ function NodeTab({
 												<StatusBadge status={n.status} />
 											</TableCell>
 											<TableCell className='text-xs text-muted-foreground'>
-												{n.installedLocation}
+												{formatNodeLocation(
+													n.installedLocation,
+													n.installedLocationTitle,
+												)}
 											</TableCell>
 											<TableCell>
 												<Button
@@ -535,7 +568,10 @@ function NodeTab({
 											{NODE_TYPE_LABELS[n.nodeType]}
 										</TableCell>
 										<TableCell className='text-xs text-muted-foreground'>
-											{n.installedLocation}
+											{formatNodeLocation(
+												n.installedLocation,
+												n.installedLocationTitle,
+											)}
 										</TableCell>
 										<TableCell>
 											<Button
