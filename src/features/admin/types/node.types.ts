@@ -41,7 +41,8 @@ export interface BaseBuildingNode {
 	nodeType: NodeTypes
 	status: NodeStatus
 	gatewayId: GatewayRef
-	installedLocation?: string
+	installedLocation?: string | InstalledLocation | null
+	installedLocationTitle?: string | null
 	installLocationImg?: InstalledLocation
 	lastSeenAt: string | null
 	saveStatusLastChange: Date

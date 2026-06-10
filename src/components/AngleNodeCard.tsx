@@ -1,6 +1,7 @@
 'use client'
 
 import { AngleNodeNodeUi } from '@/features/manager/pages/AngleNodes'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
 import { MapPinned, Wifi, WifiOff } from 'lucide-react'
 import TShapeLed from './TShapeLed'
@@ -102,7 +103,10 @@ export default function AngleNodeCard({ node }: TiltNodeCardProps) {
 			<div className='flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[10px] text-muted-foreground'>
 				<MapPinned className='w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0' />
 				<span className='font-medium truncate'>
-					{node.installedLocation || 'Position N/A'}
+					{formatNodeLocation(
+						node.installedLocation,
+						node.installedLocationTitle,
+					)}
 				</span>
 			</div>
 		</div>

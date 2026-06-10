@@ -12,7 +12,10 @@ import type {
 	CreateBuildingForm,
 	CreateWorkerPayload,
 	UpdateBuildingAlarmLevelPayload,
+	UpdateBuildingAlarmLevelResponse,
 	UpdateBuildingDto,
+	UpdateFaultFilterPayload,
+	UpdateFaultFilterResponse,
 } from '../types/building.types'
 import { NodeTypes } from '../types/node.types'
 import { unwrapResponse } from './device.api'
@@ -174,12 +177,18 @@ export const adminBuildingsApi = {
 
 	updateBuildingAlarmLevel: async ({
 		buildingId,
+		gatewayId,
+		enabled,
 		alarmType,
 		levels,
 	}: UpdateBuildingAlarmLevelPayload) => {
-		const response = await request.patch(
+		const response = await request.patch<
+			ApiResponse<UpdateBuildingAlarmLevelResponse>
+		>(
 			`/admin/buildings/${buildingId}/alarm-level`,
 			{
+				gatewayId,
+				enabled,
 				alarmType,
 				green: levels.caution,
 				yellow: levels.warning,
@@ -187,17 +196,23 @@ export const adminBuildingsApi = {
 			},
 		)
 
-		return response.data
+		return response.data.data
 	},
 
 	updateManagerBuildingAlarmLevel: async ({
 		buildingId,
+		gatewayId,
+		enabled,
 		alarmType,
 		levels,
 	}: UpdateBuildingAlarmLevelPayload) => {
-		const response = await request.patch(
+		const response = await request.patch<
+			ApiResponse<UpdateBuildingAlarmLevelResponse>
+		>(
 			`/manager/buildings/${buildingId}/alarm-level`,
 			{
+				gatewayId,
+				enabled,
 				alarmType,
 				green: levels.caution,
 				yellow: levels.warning,
@@ -205,6 +220,48 @@ export const adminBuildingsApi = {
 			},
 		)
 
-		return response.data
+		return response.data.data
+	},
+
+	updateFaultFilter: async ({
+		buildingId,
+		gatewayId,
+		enabled,
+		alarmType,
+		nodeNumber,
+		nodes,
+	}: UpdateFaultFilterPayload) => {
+		const response = await request.patch<
+			ApiResponse<UpdateFaultFilterResponse>
+		>(`/admin/buildings/${buildingId}/fault-filter`, {
+			gatewayId,
+			enabled,
+			alarmType,
+			nodeNumber,
+			nodes,
+		})
+
+		return response.data.data
+	},
+
+	updateManagerFaultFilter: async ({
+		buildingId,
+		gatewayId,
+		enabled,
+		alarmType,
+		nodeNumber,
+		nodes,
+	}: UpdateFaultFilterPayload) => {
+		const response = await request.patch<
+			ApiResponse<UpdateFaultFilterResponse>
+		>(`/manager/buildings/${buildingId}/fault-filter`, {
+			gatewayId,
+			enabled,
+			alarmType,
+			nodeNumber,
+			nodes,
+		})
+
+		return response.data.data
 	},
 }

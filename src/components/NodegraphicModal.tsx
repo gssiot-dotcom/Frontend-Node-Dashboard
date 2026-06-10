@@ -1,10 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import SwitchButton from '@/components/ui/switch-button'
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from '@/components/ui/hover-card'
 import { useNodeGraphicDataQuery } from '@/features/admin/hooks/useBuildings'
 import { NodeTypes } from '@/features/admin/types/node.types'
 import { AlarmLevels } from '@/features/manager/components/AlarmLevelSetting'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Calendar, Clock, TrendingDown, TrendingUp, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
 	CartesianGrid,
 	Line,
@@ -45,6 +52,11 @@ interface NodeGraphicModalProps {
 	nodeName?: string
 	alarmLevels: AlarmLevels
 	livePoint?: LiveGraphicPoint | null
+	faultFilter?: {
+		enabled: boolean
+		isSaving?: boolean
+		onToggle: (enabled: boolean) => void
+	}
 }
 
 type TimeMode = 'hour' | 'day'
@@ -211,6 +223,7 @@ export default function NodeGraphicModal({
 	nodeName,
 	alarmLevels,
 	livePoint,
+	faultFilter,
 }: NodeGraphicModalProps) {
 	const [mode, setMode] = useState<TimeMode>('hour')
 	const [hourValue, setHourValue] = useState(12)
@@ -219,6 +232,7 @@ export default function NodeGraphicModal({
 	)
 	const [showDayPicker, setShowDayPicker] = useState(false)
 	const pickerRef = useRef<HTMLDivElement>(null)
+	const { t } = useTranslation()
 
 	// Close day-picker on outside click
 	useEffect(() => {
@@ -465,24 +479,54 @@ export default function NodeGraphicModal({
 							</div>
 
 							{/* Alarm level legend */}
-							<div className='relative flex items-center gap-4 px-5 pb-2'>
-								{alarmLevels.caution > 0 && (
-									<span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
-										<span className='inline-block w-3 h-0.5 bg-gss-caution rounded' />
-										주의 {alarmLevels.caution}°
-									</span>
-								)}
-								{alarmLevels.warning > 0 && (
-									<span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
-										<span className='inline-block w-3 h-0.5 bg-gss-warning rounded' />
-										경고 {alarmLevels.warning}°
-									</span>
-								)}
-								{alarmLevels.danger > 0 && (
-									<span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
-										<span className='inline-block w-3 h-0.5 bg-destructive rounded' />
-										위험 {alarmLevels.danger}°
-									</span>
+							<div className='relative flex items-center justify-between gap-4 px-5 pb-2'>
+								<div className='flex min-w-0 flex-wrap items-center gap-4'>
+									{alarmLevels.caution > 0 && (
+										<span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
+											<span className='inline-block w-3 h-0.5 bg-gss-caution rounded' />
+											주의 {alarmLevels.caution}°
+										</span>
+									)}
+									{alarmLevels.warning > 0 && (
+										<span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
+											<span className='inline-block w-3 h-0.5 bg-gss-warning rounded' />
+											경고 {alarmLevels.warning}°
+										</span>
+									)}
+									{alarmLevels.danger > 0 && (
+										<span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
+											<span className='inline-block w-3 h-0.5 bg-destructive rounded' />
+											위험 {alarmLevels.danger}°
+										</span>
+									)}
+								</div>
+
+								{faultFilter && (
+									<div className='flex shrink-0 items-center gap-2'>
+										<HoverCard openDelay={200} closeDelay={100}>
+											<HoverCardTrigger asChild>
+												<span className='inline-flex'>
+													<SwitchButton
+														checked={faultFilter.enabled}
+														disabled={faultFilter.isSaving}
+														ariaLabel='Toggle node fault filter'
+														onCheckedChange={faultFilter.onToggle}
+													/>
+												</span>
+											</HoverCardTrigger>
+											<HoverCardContent
+												side='left'
+												align='center'
+												sideOffset={8}
+												className='w-56 rounded-md p-2 text-xs leading-snug text-muted-foreground'
+											>
+												{t('nodePages.controls.faultFilterDescription')}
+											</HoverCardContent>
+										</HoverCard>
+										<span className='text-xs font-medium text-muted-foreground'>
+											{t('nodePages.controls.faultFilterLabel')}
+										</span>
+									</div>
 								)}
 							</div>
 

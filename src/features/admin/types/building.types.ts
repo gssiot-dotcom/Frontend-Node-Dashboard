@@ -95,6 +95,7 @@ export type BuildingNodesPageParams = {
 export type BuildingNodesPageResponse<TNode = BaseBuildingNode> = {
 	nodesList: TNode[]
 	gatewayList: Gateway[]
+	gatewayAlarmSettings: GatewayAlarmSetting[]
 	buildingAlarmLevel: {
 		buildingId: string
 		alarmType: string
@@ -106,8 +107,67 @@ export type BuildingNodesPageResponse<TNode = BaseBuildingNode> = {
 
 export type AlarmType = 'gangform_node' | 'vertical' | string
 
+export type GatewayAlarmNodeSetting = {
+	alarmEnabled: boolean
+	alarmLevel1: number | null
+	alarmLevel2: number | null
+	alarmLevel3: number | null
+	faultFilterNodes: number[]
+}
+
+export type GatewayAlarmSetting = {
+	_id: string
+	gatewayId: string
+	gatewaySerialNum: string | null
+	angle: GatewayAlarmNodeSetting
+	vertical: GatewayAlarmNodeSetting
+	updatedBy?: string | null
+	createdAt?: string
+	updatedAt?: string
+}
+
+export type GatewayAlarmResult = {
+	gatewayId: string | null
+	gatewaySerialNum: string
+	status: 'success' | 'error' | 'timeout'
+	message: string
+	response?: unknown
+}
+
+export type GatewayAlarmSummary = {
+	total: number
+	successCount: number
+	errorCount: number
+	timeoutCount: number
+}
+
+export type UpdateBuildingAlarmLevelResponse = {
+	alarmLevel: BuildingNodesPageResponse['buildingAlarmLevel']
+	gatewayResults: GatewayAlarmResult[]
+	summary: GatewayAlarmSummary
+}
+
 export type UpdateBuildingAlarmLevelPayload = {
+	companyId?: string
 	buildingId: string
+	gatewayId?: string
+	enabled?: boolean
 	alarmType: AlarmType
 	levels: AlarmLevels
+}
+
+export type UpdateFaultFilterResponse = {
+	faultFilterNodes: number[]
+	gatewayResults: GatewayAlarmResult[]
+	summary: GatewayAlarmSummary
+}
+
+export type UpdateFaultFilterPayload = {
+	companyId?: string
+	buildingId: string
+	gatewayId: string
+	alarmType: AlarmType
+	nodeNumber?: number
+	enabled?: boolean
+	nodes?: number[]
 }

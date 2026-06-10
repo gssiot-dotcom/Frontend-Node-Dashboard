@@ -1,6 +1,7 @@
 'use client'
 
 import { GatewayRef, ScaffoldingNode } from '@/features/admin/types/node.types'
+import { formatNodeLocation } from '@/features/admin/utils/format-node-location'
 import {
 	Battery,
 	BatteryLow,
@@ -158,7 +159,10 @@ export default function ScaffoldingNodeCard({
 			<div className='flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[10px] text-muted-foreground'>
 				<MapPinned className='w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0' />
 				<span className='font-medium truncate'>
-					{node.installedLocation || 'Position N/A'}
+					{formatNodeLocation(
+						node.installedLocation,
+						node.installedLocationTitle,
+					)}
 				</span>
 			</div>
 		</div>
