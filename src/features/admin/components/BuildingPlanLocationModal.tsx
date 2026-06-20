@@ -9,19 +9,12 @@ import {
 } from '@/components/ui/dialog'
 import { getAssetUrl } from '@/lib/getAssetUrl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AngleNode } from '../types/node.types'
+import { usePlanImageRenderSize } from '../hooks/usePlanImageRenderSize'
+import { BaseBuildingNode, InstalledLocation } from '../types/node.types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type InstalledLocation = {
-	planImageIndex?: number
-	xPercent?: number
-	yPercent?: number
-}
-
-type PlanAngleNode = AngleNode & {
-	installedLocation?: InstalledLocation
-}
+type PlanNode = Pick<BaseBuildingNode, '_id' | 'number' | 'installedLocation'>
 
 // Pending: hali saqlanmagan, local state da turuvchi o'zgarishlar
 type PendingLocation = {
@@ -36,78 +29,10 @@ type BuildingPlanLocationModalProps = {
 	onClose: () => void
 	buildingId: string
 	nodeType: string
-	nodes: AngleNode[]
+	nodes: PlanNode[]
 	planImageUrls?: string[]
 	/** Save bosilganda barcha pending o'zgarishlar array sifatida keladi */
 	onSave: (locations: PendingLocation[]) => Promise<void> | void
-}
-
-// ─── useImageRenderSize hook ──────────────────────────────────────────────────
-/**
- * useImageRenderSize
- *
- * Containerga object-contain qoidasi bilan sig'adigan
- * rasmning haqiqiy render o'lchamini qaytaradi.
- *
- * O'zgarish: containerRef o'rniga faqat containerga padding
- * hisoblab, to'g'ri width/height olamiz.
- */
-function useImageRenderSize(
-	containerRef: React.RefObject<HTMLDivElement>,
-	imageSrc: string | undefined,
-) {
-	const [renderSize, setRenderSize] = useState<{
-		width: number
-		height: number
-	} | null>(null)
-
-	const naturalSize = useRef<{ width: number; height: number } | null>(null)
-
-	const recalculate = useCallback(() => {
-		if (!containerRef.current || !naturalSize.current) return
-
-		const rect = containerRef.current.getBoundingClientRect()
-		// p-4 = 16px har tomonda
-		const cw = rect.width - 32
-		const ch = rect.height - 32
-
-		if (cw <= 0 || ch <= 0) return
-
-		const { width: nw, height: nh } = naturalSize.current
-		// scale ni container ga qarab hisoblash
-		const scale = Math.min(cw / nw, ch / nh, 1) // ← 1 dan oshmasin (zoom in bo'lmasin)
-
-		setRenderSize({
-			width: Math.floor(nw * scale),
-			height: Math.floor(nh * scale),
-		})
-	}, [containerRef])
-
-	useEffect(() => {
-		if (!imageSrc) {
-			setRenderSize(null)
-			naturalSize.current = null
-			return
-		}
-		const img = new Image()
-		img.onload = () => {
-			naturalSize.current = {
-				width: img.naturalWidth,
-				height: img.naturalHeight,
-			}
-			recalculate()
-		}
-		img.src = imageSrc
-	}, [imageSrc, recalculate])
-
-	useEffect(() => {
-		if (!containerRef.current) return
-		const ro = new ResizeObserver(recalculate)
-		ro.observe(containerRef.current)
-		return () => ro.disconnect()
-	}, [containerRef, recalculate])
-
-	return renderSize
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -122,6 +47,7 @@ export default function BuildingPlanLocationModal({
 	const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 	const [saving, setSaving] = useState(false)
+	const [saveError, setSaveError] = useState<string | null>(null)
 
 	/**
 	 * pendingLocations: foydalanuvchi belgilagan lekin hali saqlanmagan joylashuvlar.
@@ -138,11 +64,11 @@ export default function BuildingPlanLocationModal({
 		? getAssetUrl(planImages[selectedImageIndex])
 		: undefined
 
-	const renderSize = useImageRenderSize(containerRef, selectedImageUrl)
+	const renderSize = usePlanImageRenderSize(containerRef, selectedImageUrl, {
+		allowUpscale: true, // ← shu yetishmayapti
+	})
 
-	const selectedNode = nodes.find(n => n._id === selectedNodeId) as
-		| PlanAngleNode
-		| undefined
+	const selectedNode = nodes.find(n => n._id === selectedNodeId)
 
 	// Modal yopilganda state tozalash
 	useEffect(() => {
@@ -150,6 +76,7 @@ export default function BuildingPlanLocationModal({
 			setSelectedNodeId(null)
 			setPendingLocations(new Map())
 			setSelectedImageIndex(0)
+			setSaveError(null)
 		}
 	}, [isOpen])
 
@@ -159,7 +86,7 @@ export default function BuildingPlanLocationModal({
 	 * 2. Yo'q bo'lsa — serverdan kelgan installedLocation
 	 */
 	const getNodeLocation = useCallback(
-		(node: PlanAngleNode): InstalledLocation | null => {
+		(node: PlanNode): InstalledLocation | null => {
 			const pending = pendingLocations.get(node._id)
 			if (pending) {
 				return {
@@ -168,14 +95,22 @@ export default function BuildingPlanLocationModal({
 					yPercent: pending.yPercent,
 				}
 			}
-			return node.installedLocation ?? null
+
+			if (
+				!node.installedLocation ||
+				typeof node.installedLocation === 'string'
+			) {
+				return null
+			}
+
+			return node.installedLocation
 		},
 		[pendingLocations],
 	)
 
 	// Joriy plan image da ko'rinadigan nodelar (pending + server data birlashtirilib)
 	const visibleNodes = useMemo(() => {
-		return (nodes as PlanAngleNode[]).filter(node => {
+		return nodes.filter(node => {
 			const loc = getNodeLocation(node)
 			return (
 				loc != null &&
@@ -189,11 +124,13 @@ export default function BuildingPlanLocationModal({
 	// Plan ustiga bosilganda — pending state ga qo'shish (hali saqlanmaydi)
 	const handlePlanClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement>) => {
-			if (!selectedNode || !renderSize) return
+			if (!selectedNode) return
 
 			const rect = event.currentTarget.getBoundingClientRect()
-			const xPercent = ((event.clientX - rect.left) / renderSize.width) * 100
-			const yPercent = ((event.clientY - rect.top) / renderSize.height) * 100
+			if (rect.width <= 0 || rect.height <= 0) return
+
+			const xPercent = ((event.clientX - rect.left) / rect.width) * 100
+			const yPercent = ((event.clientY - rect.top) / rect.height) * 100
 
 			if (xPercent < 0 || xPercent > 100 || yPercent < 0 || yPercent > 100)
 				return
@@ -209,7 +146,7 @@ export default function BuildingPlanLocationModal({
 				return next
 			})
 		},
-		[selectedNode, renderSize, selectedImageIndex],
+		[selectedNode, selectedImageIndex],
 	)
 
 	// Save bosilganda barcha pending o'zgarishlarni array sifatida yuborish
@@ -219,10 +156,17 @@ export default function BuildingPlanLocationModal({
 			return
 		}
 		setSaving(true)
+		setSaveError(null)
 		try {
 			await onSave(Array.from(pendingLocations.values()))
 			setPendingLocations(new Map())
 			onClose()
+		} catch (error) {
+			setSaveError(
+				error instanceof Error
+					? error.message
+					: '도면 위치 저장에 실패했습니다.',
+			)
 		} finally {
 			setSaving(false)
 		}
@@ -245,9 +189,8 @@ export default function BuildingPlanLocationModal({
 						<p className='text-sm font-medium mb-3'>노드 목록</p>
 						<div className='space-y-2'>
 							{nodes.map(node => {
-								const pNode = node as PlanAngleNode
 								const pending = pendingLocations.get(node._id)
-								const serverLoc = pNode.installedLocation
+								const serverLoc = getNodeLocation(node)
 								const hasLocation =
 									pending != null ||
 									(serverLoc?.xPercent != null && serverLoc?.yPercent != null)
@@ -279,6 +222,11 @@ export default function BuildingPlanLocationModal({
 									</button>
 								)
 							})}
+							{nodes.length === 0 && (
+								<p className='text-xs text-muted-foreground'>
+									노드가 없습니다.
+								</p>
+							)}
 						</div>
 					</aside>
 
@@ -289,30 +237,32 @@ export default function BuildingPlanLocationModal({
 							ref={containerRef}
 							className='flex-1 min-h-0 bg-muted/20 flex items-center justify-center overflow-hidden'
 						>
-							{selectedImageUrl && renderSize ? (
+							{selectedImageUrl ? (
 								<div
 									onClick={handlePlanClick}
-									className={`relative select-none ${
+									className={`relative select-none max-w-full max-h-full ${
 										selectedNode ? 'cursor-crosshair' : 'cursor-default'
 									}`}
-									style={{
-										width: renderSize.width,
-										height: renderSize.height,
-										maxWidth: '100%',
-										maxHeight: '100%',
-									}}
+									style={
+										renderSize
+											? { width: renderSize.width, height: renderSize.height }
+											: undefined
+									}
 								>
 									<img
 										src={selectedImageUrl}
 										alt='Building plan'
-										className='w-full h-full block rounded-lg border bg-background'
+										className={
+											renderSize
+												? 'w-full h-full object-contain block rounded-lg border bg-background'
+												: 'max-w-full max-h-full w-auto h-auto object-contain block rounded-lg border bg-background'
+										}
 										draggable={false}
 									/>
 
 									{/* Node markers */}
 									{visibleNodes.map(node => {
-										const pNode = node as PlanAngleNode
-										const loc = getNodeLocation(pNode)!
+										const loc = getNodeLocation(node)!
 										const isSelected = node._id === selectedNodeId
 										const isPending = pendingLocations.has(node._id)
 
@@ -344,7 +294,7 @@ export default function BuildingPlanLocationModal({
 								</div>
 							) : (
 								<div className='h-full flex items-center justify-center text-sm text-muted-foreground'>
-									{!selectedImageUrl ? '로딩 중...' : '도면 사진이 없습니다.'}
+									{selectedImageUrl ? '로딩 중...' : '도면 사진이 없습니다.'}
 								</div>
 							)}
 						</div>
@@ -391,6 +341,12 @@ export default function BuildingPlanLocationModal({
 									</span>
 								)}
 							</p>
+
+							{saveError && (
+								<p className='text-xs text-destructive shrink-0 max-w-64 truncate'>
+									{saveError}
+								</p>
+							)}
 
 							{/* Buttons */}
 							<div className='flex items-center gap-2 shrink-0'>

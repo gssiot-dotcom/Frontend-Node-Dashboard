@@ -8,84 +8,21 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { getAssetUrl } from '@/lib/getAssetUrl'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { usePlanImageRenderSize } from '../hooks/usePlanImageRenderSize'
+import { BaseBuildingNode, InstalledLocation } from '../types/node.types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type InstalledLocation = {
-	planImageIndex?: number
-	xPercent?: number
-	yPercent?: number
-}
-
-type AngleNode = {
-	_id: string
-	number: number
-	installedLocation?: InstalledLocation
-}
+type PlanNode = Pick<BaseBuildingNode, '_id' | 'number' | 'installedLocation'>
 
 type BuildingPlanViewModalProps = {
 	isOpen: boolean
 	onClose: () => void
 	/** NodeCard bosilganda berilgan node — avtomatik highlight bo'ladi */
-	activeNodeId: string
-	nodes: AngleNode[]
+	activeNodeId?: string | null
+	nodes: PlanNode[]
 	planImageUrls?: string[]
-}
-
-// ─── Overlay size hook ────────────────────────────────────────────────────────
-/**
- * Rasmning haqiqiy render o'lchamini kuzatadi (object-contain hisobga olingan).
- * Bu hook har ikkala modalda ishlatiladi — alohida faylga chiqarish mumkin.
- */
-function useImageRenderSize(
-	containerRef: React.RefObject<HTMLDivElement>,
-	imageSrc: string | undefined,
-) {
-	const [renderSize, setRenderSize] = useState<{
-		width: number
-		height: number
-	} | null>(null)
-
-	const naturalSize = useRef<{ width: number; height: number } | null>(null)
-
-	const recalculate = useCallback(() => {
-		if (!containerRef.current || !naturalSize.current) return
-		const { width: cw, height: ch } =
-			containerRef.current.getBoundingClientRect()
-		const { width: nw, height: nh } = naturalSize.current
-		const scale = Math.min(cw / nw, ch / nh)
-		setRenderSize({
-			width: nw * scale,
-			height: nh * scale,
-		})
-	}, [containerRef])
-
-	useEffect(() => {
-		if (!imageSrc) {
-			setRenderSize(null)
-			naturalSize.current = null
-			return
-		}
-		const img = new Image()
-		img.onload = () => {
-			naturalSize.current = {
-				width: img.naturalWidth,
-				height: img.naturalHeight,
-			}
-			recalculate()
-		}
-		img.src = imageSrc
-	}, [imageSrc, recalculate])
-
-	useEffect(() => {
-		if (!containerRef.current) return
-		const ro = new ResizeObserver(recalculate)
-		ro.observe(containerRef.current)
-		return () => ro.disconnect()
-	}, [containerRef, recalculate])
-
-	return renderSize
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -101,7 +38,12 @@ export default function BuildingPlanViewModal({
 
 	// activeNode qaysi plan image da bo'lsa o'sha tab avtomatik tanlanadi
 	const activeNode = nodes.find(n => n._id === activeNodeId)
-	const defaultImageIndex = activeNode?.installedLocation?.planImageIndex ?? 0
+	const activeLocation =
+		activeNode?.installedLocation &&
+		typeof activeNode.installedLocation !== 'string'
+			? activeNode.installedLocation
+			: null
+	const defaultImageIndex = activeLocation?.planImageIndex ?? 0
 
 	const [selectedImageIndex, setSelectedImageIndex] =
 		useState(defaultImageIndex)
@@ -119,12 +61,18 @@ export default function BuildingPlanViewModal({
 		? getAssetUrl(planImages[selectedImageIndex])
 		: undefined
 
-	const renderSize = useImageRenderSize(containerRef, selectedImageUrl)
+	const renderSize = usePlanImageRenderSize(containerRef, selectedImageUrl, {
+		allowUpscale: true, // ← bu yetishmayapti
+	})
 
 	// Joriy plan image da joylashgan barcha nodelar
 	const visibleNodes = useMemo(() => {
 		return nodes.filter(node => {
-			const loc = node.installedLocation
+			const loc =
+				node.installedLocation && typeof node.installedLocation !== 'string'
+					? node.installedLocation
+					: null
+
 			return (
 				loc != null &&
 				loc.xPercent != null &&
@@ -152,7 +100,10 @@ export default function BuildingPlanViewModal({
 							{planImages.map((url, index) => {
 								// 이 plan image에 위치가 설정된 node 개수
 								const nodeCount = nodes.filter(
-									n => n.installedLocation?.planImageIndex === index,
+									n =>
+										n.installedLocation &&
+										typeof n.installedLocation !== 'string' &&
+										n.installedLocation.planImageIndex === index,
 								).length
 
 								return (
@@ -189,31 +140,36 @@ export default function BuildingPlanViewModal({
 					{/* Main plan image + overlay */}
 					<div
 						ref={containerRef}
-						className='flex-1 min-h-0 bg-muted/20 flex items-center justify-center overflow-hidden p-4'
+						className='flex-1 min-h-0 bg-muted/20 flex items-center justify-center overflow-hidden'
 					>
-						{selectedImageUrl && renderSize ? (
+						{selectedImageUrl ? (
 							/**
 							 * Overlay div: rasmning haqiqiy render o'lchamiga teng.
 							 * Ekran katta yoki kichik bo'lsa ham xPercent/yPercent
 							 * bu div ichida bir xil foizda joylashadi.
 							 */
 							<div
-								className='relative select-none'
-								style={{
-									width: renderSize.width,
-									height: renderSize.height,
-								}}
+								className='relative select-none max-w-full max-h-full max-sm:w-auto max-sm:h-auto'
+								style={
+									renderSize
+										? { width: renderSize.width, height: renderSize.height }
+										: undefined
+								}
 							>
 								<img
 									src={selectedImageUrl}
 									alt='Building plan'
-									className='w-full h-full block rounded-lg border bg-background'
+									className={
+										renderSize
+											? 'w-full h-full object-contain block rounded-lg border bg-background'
+											: 'max-w-full max-h-full w-auto h-auto object-contain block rounded-lg border bg-background'
+									}
 									draggable={false}
 								/>
 
 								{/* Node markers */}
 								{visibleNodes.map(node => {
-									const loc = node.installedLocation!
+									const loc = node.installedLocation as InstalledLocation
 									const isActive = node._id === activeNodeId
 
 									return (

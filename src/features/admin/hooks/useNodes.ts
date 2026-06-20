@@ -1,7 +1,13 @@
 import { queryKeys } from '@/shared/utils/queryKeys'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminNodesApi } from '../api/nodes.api'
-import type { CreateNodeDto, UpdateNodeDto } from '../types/node.types'
+import { companyBuildingDeviceQueryKeys } from './useBuildings'
+import type {
+	CreateNodeDto,
+	InstalledLocation,
+	NodeTypes,
+	UpdateNodeDto,
+} from '../types/node.types'
 
 export const adminNodeKeys = {
 	all: ['admin', 'devices'] as const,
@@ -69,6 +75,45 @@ export function useUpdateAdminNode() {
 			if (variables.gatewayId) {
 				queryClient.invalidateQueries({
 					queryKey: queryKeys.admin.nodes.byGateway(variables.gatewayId),
+				})
+			}
+		},
+	})
+}
+
+export function useUpdateNodePlanLocations() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({
+			locations,
+		}: {
+			companyId?: string
+			buildingId?: string
+			nodeType?: NodeTypes
+			locations: Array<InstalledLocation & { nodeId: string }>
+		}) =>
+			Promise.all(
+				locations.map(({ nodeId, planImageIndex, xPercent, yPercent }) =>
+					adminNodesApi.updatePlanLocation({
+						nodeId,
+						installedLocation: {
+							planImageIndex,
+							xPercent,
+							yPercent,
+						},
+					}),
+				),
+			),
+
+		onSuccess: (_, variables) => {
+			if (variables.companyId && variables.buildingId && variables.nodeType) {
+				queryClient.invalidateQueries({
+					queryKey: companyBuildingDeviceQueryKeys.buildingNodesPage(
+						variables.companyId,
+						variables.buildingId,
+						variables.nodeType,
+					),
 				})
 			}
 		},
