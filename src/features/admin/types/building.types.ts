@@ -119,6 +119,7 @@ export type GatewayAlarmSetting = {
 	_id: string
 	gatewayId: string
 	gatewaySerialNum: string | null
+	door: GatewayAlarmNodeSetting
 	angle: GatewayAlarmNodeSetting
 	vertical: GatewayAlarmNodeSetting
 	updatedBy?: string | null

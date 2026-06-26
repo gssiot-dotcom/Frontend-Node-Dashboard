@@ -1,5 +1,4 @@
 import { ApiResponse } from '@/shared/api/types'
-import { InstalledLocation } from '../components/BuildingPlanLocationModal'
 import { GatewayStatus } from './companyAssignment.types'
 import { GatewayTypes } from './gateway.types'
 
@@ -24,6 +23,14 @@ export type CreateNodesResponse = ApiResponse<{
 
 export type UpdateNodeDto = Partial<CreateNodeDto> & {
 	status?: NodeStatus
+	installedLocation?: InstalledLocation
+	installLocationImg?: InstalledLocation
+}
+
+export type InstalledLocation = {
+	planImageIndex?: number | null
+	xPercent?: number | null
+	yPercent?: number | null
 }
 
 export type GatewayRef =

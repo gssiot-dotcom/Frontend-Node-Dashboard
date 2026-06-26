@@ -91,8 +91,8 @@ export default function CompanyBuildingsPage() {
 	}
 
 	useEffect(() => {
-		if (buildings.length > 0) {
-			setSelectedBuildingId(buildings[0]._id)
+		if (buildings.length > 0 && !selectedBuildingId) {
+			setSelectedBuildingId(initialBuildingId || buildings[0]._id)
 		}
 	}, [buildings, initialBuildingId, selectedBuildingId])
 

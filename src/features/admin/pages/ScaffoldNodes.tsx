@@ -1,9 +1,11 @@
 'use client'
 
+import ScaffoldNodeDetailModal from '@/components/ScaffoldNodeDetailModal'
 import ScaffoldingNodeCard from '@/components/ScaffoldNodeCard'
 import ScaffoldingNodeSkeleton from '@/components/ScaffoldNodeSkeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 
 import { useRealtimeRoom } from '@/hooks/useRealTime'
 import { formatNodeLocation } from '../utils/format-node-location'
@@ -12,7 +14,12 @@ import { DoorOpen, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
-import { useBuildingNodesPageQuery } from '../hooks/useBuildings'
+import {
+	useBuildingNodesPageQuery,
+	useUpdateBuildingAlarmLevelMutation,
+	useUpdateFaultFilterMutation,
+} from '../hooks/useBuildings'
+import { GatewayAlarmSetting } from '../types/building.types'
 import { GatewayRef, NodeTypes, ScaffoldingNode } from '../types/node.types'
 
 const STATUS_FILTERS = [
@@ -39,6 +46,7 @@ type NodePageState = {
 	buildingId?: string
 	buildingName?: string
 	nodeType?: NodeTypes
+	buildingPlanImageUrls?: string[]
 }
 
 function getGatewaySearchText(gatewayId: GatewayRef) {
@@ -51,6 +59,21 @@ function getGatewaySearchText(gatewayId: GatewayRef) {
 	return `${gatewayId._id} ${gatewayId.serialNumber || ''}`
 }
 
+function getGatewayId(gatewayId: GatewayRef) {
+	if (!gatewayId) return ''
+	if (typeof gatewayId === 'string') return gatewayId
+	return gatewayId._id
+}
+
+function getFaultFilterNodes(
+	settings: GatewayAlarmSetting[],
+	gatewayId: string,
+) {
+	const setting = settings.find(item => String(item.gatewayId) === gatewayId)
+
+	return setting?.door?.faultFilterNodes ?? []
+}
+
 function getAlertLevel(node: ScaffoldingNode) {
 	if (node.status === 'offline') return 'offline'
 	if (node.doorState === 1) return 'danger'
@@ -61,6 +84,8 @@ export default function ScaffoldingNodes() {
 	const { t } = useTranslation()
 	const [search, setSearch] = useState('')
 	const [statusFilter, setStatusFilter] = useState('all')
+	const [gatewayFilter, setGatewayFilter] = useState('all')
+	const [selectedNode, setSelectedNode] = useState<ScaffoldingNode | null>(null)
 
 	const location = useLocation()
 	const params = useParams()
@@ -69,6 +94,7 @@ export default function ScaffoldingNodes() {
 
 	const companyId = state.companyId
 	const buildingId = state.buildingId || params.buildingId
+	const buildingPlanImageUrls = state.buildingPlanImageUrls || []
 
 	// Bu page doim scaffold-node uchun.
 	// State bo‘lmasa ham ishlashi uchun fallback berdik.
@@ -92,6 +118,11 @@ export default function ScaffoldingNodes() {
 	}, [nodesList])
 
 	const gatewayList = data?.gatewayList ?? []
+	const gatewayAlarmSettings = data?.gatewayAlarmSettings ?? []
+	const alarmLevels = useMemo(
+		() => ({ safe: 0, caution: 0, warning: 0, danger: 0 }),
+		[],
+	)
 
 	const nodesWithUi = useMemo(
 		() =>
@@ -121,10 +152,12 @@ export default function ScaffoldingNodes() {
 
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
+			const matchesGateway =
+				gatewayFilter === 'all' || getGatewayId(node.gatewayId) === gatewayFilter
 
-			return matchesSearch && matchesStatus
+			return matchesSearch && matchesStatus && matchesGateway
 		})
-	}, [nodesWithUi, search, statusFilter])
+	}, [nodesWithUi, search, statusFilter, gatewayFilter])
 
 	const counts = useMemo(
 		() => ({
@@ -140,6 +173,10 @@ export default function ScaffoldingNodes() {
 		() => nodesWithUi.some(node => node.status !== 'offline'),
 		[nodesWithUi],
 	)
+	const { mutate: updateAlarmLevel, isPending: isAlarmLevelSaving } =
+		useUpdateBuildingAlarmLevelMutation()
+	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
+		useUpdateFaultFilterMutation()
 
 	const handleDoorRealtime = useCallback(
 		(sensorData: DoorNodeRealtimePayload) => {
@@ -257,7 +294,7 @@ export default function ScaffoldingNodes() {
 					</div>
 				</div>
 
-				<div className='flex gap-2 mb-4 overflow-x-auto pb-1'>
+				<div className='flex items-center gap-2 mb-4 overflow-x-auto pb-1'>
 					{STATUS_FILTERS.map(f => (
 						<Button
 							key={f.value}
@@ -276,6 +313,23 @@ export default function ScaffoldingNodes() {
 							</span>
 						</Button>
 					))}
+
+					<GatewayAlarmControls
+						gateways={gatewayList}
+						settings={gatewayAlarmSettings}
+						buildingId={buildingId}
+						alarmType={nodeType}
+						alarmLevels={alarmLevels}
+						selectedGatewayId={gatewayFilter}
+						isSaving={isAlarmLevelSaving}
+						onSelectGateway={setGatewayFilter}
+						onToggleGateway={payload =>
+							updateAlarmLevel({
+								...payload,
+								companyId,
+							})
+						}
+					/>
 				</div>
 
 				{isLoading ? (
@@ -294,10 +348,51 @@ export default function ScaffoldingNodes() {
 				) : (
 					<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 lg:gap-3'>
 						{filtered.map(node => (
-							<ScaffoldingNodeCard key={node._id} node={node} />
+							<div
+								key={node._id}
+								role='button'
+								tabIndex={0}
+								onClick={() => setSelectedNode(node)}
+								onKeyDown={e => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault()
+										setSelectedNode(node)
+									}
+								}}
+								className='cursor-pointer rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40'
+							>
+								<ScaffoldingNodeCard node={node} />
+							</div>
 						))}
 					</div>
 				)}
+
+				<ScaffoldNodeDetailModal
+					isOpen={!!selectedNode}
+					onClose={() => setSelectedNode(null)}
+					node={selectedNode}
+					planImageUrls={buildingPlanImageUrls}
+					faultFilter={
+						selectedNode && getGatewayId(selectedNode.gatewayId)
+							? {
+									enabled: getFaultFilterNodes(
+										gatewayAlarmSettings,
+										getGatewayId(selectedNode.gatewayId),
+									).includes(selectedNode.number),
+									isSaving: isFaultFilterSaving,
+									onToggle: enabled =>
+										updateFaultFilter({
+											companyId,
+											buildingId,
+											gatewayId: getGatewayId(selectedNode.gatewayId),
+											alarmType: nodeType,
+											nodeNumber: selectedNode.number,
+											enabled,
+										}),
+								}
+							: undefined
+					}
+				/>
 			</motion.div>
 		</div>
 	)

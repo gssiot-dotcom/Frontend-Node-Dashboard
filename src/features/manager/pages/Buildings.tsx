@@ -155,6 +155,7 @@ export default function BuildingsPage() {
 				buildingId: selectedBuilding._id,
 				buildingName: selectedBuilding.title,
 				nodeType: nodeType.type,
+				buildingPlanImageUrls: selectedBuilding.buildingPlanImage,
 			},
 		})
 	}

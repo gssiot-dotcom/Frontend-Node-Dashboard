@@ -18,11 +18,13 @@ import { Activity, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
 	useBuildingNodesPageQuery,
-	useUpdateFaultFilterMutation,
 	useUpdateBuildingAlarmLevelMutation,
+	useUpdateFaultFilterMutation,
 } from '../hooks/useBuildings'
+import { useUpdateNodePlanLocations } from '../hooks/useNodes'
 import { GatewayAlarmSetting } from '../types/building.types'
 import { AngleNode, GatewayRef, NodeTypes } from '../types/node.types'
 import { GangformPayload } from './GangformNodes'
@@ -99,6 +101,7 @@ export default function AdminAngleNodesPage() {
 	const [latestGraphicPoint, setLatestGraphicPoint] =
 		useState<GangformPayload | null>(null)
 	const [locationModalOpen, setLocationModalOpen] = useState(false)
+	const [planViewNodeId, setPlanViewNodeId] = useState<string | null>(null)
 
 	const [alarmLevels, setAlarmLevels] = useState<AlarmLevels>({
 		safe: 0,
@@ -185,11 +188,55 @@ export default function AdminAngleNodesPage() {
 	}
 
 	const connected = nodesWithUi.some(node => node.isOnline)
+	const hasPlanImages = buildingPlanImageUrls.length > 0
 
 	const { mutate: updateAlarmLevel, isPending: isAlarmLevelSaving } =
 		useUpdateBuildingAlarmLevelMutation()
 	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
 		useUpdateFaultFilterMutation()
+	const { mutateAsync: updatePlanLocations, isPending: isPlanLocationSaving } =
+		useUpdateNodePlanLocations()
+
+	const handleSavePlanLocations = useCallback(
+		async (
+			locations: Array<{
+				nodeId: string
+				planImageIndex: number
+				xPercent: number
+				yPercent: number
+			}>,
+		) => {
+			await updatePlanLocations({
+				companyId,
+				buildingId,
+				nodeType,
+				locations,
+			})
+
+			const locationsByNodeId = new Map(
+				locations.map(location => [location.nodeId, location]),
+			)
+
+			setAngleNodes(prev =>
+				prev.map(node => {
+					const location = locationsByNodeId.get(node._id)
+					if (!location) return node
+
+					return {
+						...node,
+						installedLocation: {
+							planImageIndex: location.planImageIndex,
+							xPercent: location.xPercent,
+							yPercent: location.yPercent,
+						},
+					}
+				}),
+			)
+
+			toast.success('Plan locations saved')
+		},
+		[buildingId, companyId, nodeType, updatePlanLocations],
+	)
 
 	// realtime handler
 	const handleAngleRealtime = useCallback((sensorData: GangformPayload) => {
@@ -357,9 +404,22 @@ export default function AdminAngleNodesPage() {
 						{/* <Button
 							variant='outline'
 							size='sm'
-							onClick={() => setLocationModalOpen(true)}
-							className='h-7 text-xs'
+							onClick={() => setPlanViewNodeId('')}
+							disabled={!hasPlanImages}
+							className='h-7 text-xs gap-1.5'
 						>
+							<MapPinned className='w-3.5 h-3.5' />
+							Plan View
+						</Button>
+
+						<Button
+							variant='outline'
+							size='sm'
+							onClick={() => setLocationModalOpen(true)}
+							disabled={!hasPlanImages || isPlanLocationSaving}
+							className='h-7 text-xs gap-1.5'
+						>
+							<MapPinned className='w-3.5 h-3.5' />
 							{t('nodePages.setPlanPhoto')}
 						</Button> */}
 
@@ -451,13 +511,22 @@ export default function AdminAngleNodesPage() {
 					}
 				/>
 
-				{/* <BuildingPlanLocationModal
+				{/* <BuildingPlanViewModal
+					isOpen={planViewNodeId !== null}
+					onClose={() => setPlanViewNodeId(null)}
+					activeNodeId={planViewNodeId}
+					nodes={angleNodes}
+					planImageUrls={buildingPlanImageUrls}
+				/>
+
+				<BuildingPlanLocationModal
 					isOpen={locationModalOpen}
 					onClose={() => setLocationModalOpen(false)}
 					buildingId={buildingId}
 					nodeType={nodeType}
-					nodes={nodesList}
+					nodes={angleNodes}
 					planImageUrls={buildingPlanImageUrls}
+					onSave={handleSavePlanLocations}
 				/> */}
 			</motion.div>
 		</div>

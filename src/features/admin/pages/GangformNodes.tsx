@@ -7,21 +7,23 @@ import AlarmLevelSettings, {
 import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 import { useRealtimeRoom } from '@/hooks/useRealTime'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
-import { formatNodeLocation } from '../utils/format-node-location'
 import { motion } from 'framer-motion'
 import { Activity, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import NodeCard from '../../../components/GangformNodeCard'
 import NodeCardSkeleton from '../../../components/NodeCardSkeleton'
 import {
 	useBuildingNodesPageQuery,
-	useUpdateFaultFilterMutation,
 	useUpdateBuildingAlarmLevelMutation,
+	useUpdateFaultFilterMutation,
 } from '../hooks/useBuildings'
+import { useUpdateNodePlanLocations } from '../hooks/useNodes'
 import { GatewayAlarmSetting } from '../types/building.types'
 import { GangformNode, GatewayRef, NodeTypes } from '../types/node.types'
+import { formatNodeLocation } from '../utils/format-node-location'
 
 export interface GangformPayload {
 	nodeNumber: number
@@ -47,6 +49,7 @@ type NodePageState = {
 	buildingId?: string
 	buildingName?: string
 	nodeType?: NodeTypes
+	buildingPlanImageUrls?: string[]
 }
 
 export type GangformNodeUi = GangformNode & {
@@ -126,6 +129,8 @@ export default function VerticalNodes() {
 	const [graphicNode, setGraphicNode] = useState<GangformNodeUi | null>(null)
 	const [latestGraphicPoint, setLatestGraphicPoint] =
 		useState<GangformPayload | null>(null)
+	const [locationModalOpen, setLocationModalOpen] = useState(false)
+	const [planViewNodeId, setPlanViewNodeId] = useState<string | null>(null)
 
 	const [alarmLevels, setAlarmLevels] = useState<AlarmLevels>({
 		safe: 0,
@@ -142,6 +147,7 @@ export default function VerticalNodes() {
 
 	const companyId = state.companyId
 	const buildingId = state.buildingId || params.buildingId
+	const buildingPlanImageUrls = state.buildingPlanImageUrls || []
 
 	// Bu page doim gangform-node uchun.
 	const nodeType: NodeTypes = 'gangform_node'
@@ -199,7 +205,8 @@ export default function VerticalNodes() {
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
 			const matchesGateway =
-				gatewayFilter === 'all' || getGatewayId(node.gatewayId) === gatewayFilter
+				gatewayFilter === 'all' ||
+				getGatewayId(node.gatewayId) === gatewayFilter
 
 			return matchesSearch && matchesStatus && matchesGateway
 		})
@@ -214,6 +221,7 @@ export default function VerticalNodes() {
 	}
 
 	const connected = nodesWithUi.some(node => node.isOnline)
+	const hasPlanImages = buildingPlanImageUrls.length > 0
 
 	const statusToAlertLevel = (
 		status?: GangformPayload['status'],
@@ -238,6 +246,49 @@ export default function VerticalNodes() {
 		useUpdateBuildingAlarmLevelMutation()
 	const { mutate: updateFaultFilter, isPending: isFaultFilterSaving } =
 		useUpdateFaultFilterMutation()
+	const { mutateAsync: updatePlanLocations, isPending: isPlanLocationSaving } =
+		useUpdateNodePlanLocations()
+
+	const handleSavePlanLocations = useCallback(
+		async (
+			locations: Array<{
+				nodeId: string
+				planImageIndex: number
+				xPercent: number
+				yPercent: number
+			}>,
+		) => {
+			await updatePlanLocations({
+				companyId,
+				buildingId,
+				nodeType,
+				locations,
+			})
+
+			const locationsByNodeId = new Map(
+				locations.map(location => [location.nodeId, location]),
+			)
+
+			setNodesWithUi(prev =>
+				prev.map(node => {
+					const location = locationsByNodeId.get(node._id)
+					if (!location) return node
+
+					return {
+						...node,
+						installedLocation: {
+							planImageIndex: location.planImageIndex,
+							xPercent: location.xPercent,
+							yPercent: location.yPercent,
+						},
+					}
+				}),
+			)
+
+			toast.success('Plan locations saved')
+		},
+		[buildingId, companyId, nodeType, updatePlanLocations],
+	)
 
 	// realtime handler — backenddan kelgan status ishlatiladi
 	const handleVerticalRealtime = useCallback((sensorData: GangformPayload) => {
@@ -408,20 +459,44 @@ export default function VerticalNodes() {
 					/>
 
 					<div className='ml-auto shrink-0 max-sm:hidden'>
-						<AlarmLevelSettings
-							value={alarmLevels}
-							onChange={setAlarmLevels}
-							t={t}
-							isSaving={isAlarmLevelSaving}
-							onSave={levels => {
-								updateAlarmLevel({
-									companyId,
-									buildingId,
-									alarmType: nodeType,
-									levels,
-								})
-							}}
-						/>
+						<div className='flex items-center gap-2'>
+							{/* <Button
+								variant='outline'
+								size='sm'
+								onClick={() => setPlanViewNodeId('')}
+								disabled={!hasPlanImages}
+								className='h-7 text-xs gap-1.5'
+							>
+								<MapPinned className='w-3.5 h-3.5' />
+								Plan View
+							</Button>
+
+							<Button
+								variant='outline'
+								size='sm'
+								onClick={() => setLocationModalOpen(true)}
+								disabled={!hasPlanImages || isPlanLocationSaving}
+								className='h-7 text-xs gap-1.5'
+							>
+								<MapPinned className='w-3.5 h-3.5' />
+								{t('nodePages.setPlanPhoto')}
+							</Button> */}
+
+							<AlarmLevelSettings
+								value={alarmLevels}
+								onChange={setAlarmLevels}
+								t={t}
+								isSaving={isAlarmLevelSaving}
+								onSave={levels => {
+									updateAlarmLevel({
+										companyId,
+										buildingId,
+										alarmType: nodeType,
+										levels,
+									})
+								}}
+							/>
+						</div>
 					</div>
 				</div>
 
@@ -496,6 +571,24 @@ export default function VerticalNodes() {
 							: null
 					}
 				/>
+
+				{/* <BuildingPlanViewModal
+					isOpen={planViewNodeId !== null}
+					onClose={() => setPlanViewNodeId(null)}
+					activeNodeId={planViewNodeId}
+					nodes={nodesWithUi}
+					planImageUrls={buildingPlanImageUrls}
+				/>
+
+				<BuildingPlanLocationModal
+					isOpen={locationModalOpen}
+					onClose={() => setLocationModalOpen(false)}
+					buildingId={buildingId}
+					nodeType={nodeType}
+					nodes={nodesWithUi}
+					planImageUrls={buildingPlanImageUrls}
+					onSave={handleSavePlanLocations}
+				/> */}
 			</motion.div>
 		</div>
 	)

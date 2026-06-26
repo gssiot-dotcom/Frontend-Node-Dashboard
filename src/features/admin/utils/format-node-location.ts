@@ -1,4 +1,4 @@
-import { InstalledLocation } from '../components/BuildingPlanLocationModal'
+import { InstalledLocation } from '../types/node.types'
 
 export type NodeLocationValue = string | InstalledLocation | null | undefined
 

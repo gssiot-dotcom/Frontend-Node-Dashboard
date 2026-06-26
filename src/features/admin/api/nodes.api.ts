@@ -1,10 +1,18 @@
 import { request } from '@/shared/api/httpClient'
 import {
+	BaseBuildingNode,
 	CreateNodesResponse,
 	type CreateNodeDto,
-	type Node,
+	type InstalledLocation,
 	type UpdateNodeDto,
 } from '../types/node.types'
+
+type Node = BaseBuildingNode
+
+export type UpdateNodePlanLocationDto = {
+	nodeId: string
+	installedLocation: InstalledLocation
+}
 
 export const adminNodesApi = {
 	getByGatewayId: async (gatewayId: string) => {
@@ -28,7 +36,18 @@ export const adminNodesApi = {
 	},
 
 	update: async (nodeId: string, data: UpdateNodeDto) => {
-		const response = await request.patch<Node>(`/admin/nodes/${nodeId}`, data)
+		const response = await request.patch<Node>(`/nodes/${nodeId}`, data)
+
+		return response.data
+	},
+
+	updatePlanLocation: async ({
+		nodeId,
+		installedLocation,
+	}: UpdateNodePlanLocationDto) => {
+		const response = await request.patch<Node>(`/nodes/${nodeId}`, {
+			installedLocation,
+		})
 
 		return response.data
 	},

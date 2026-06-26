@@ -41,6 +41,7 @@ function getGatewayId(gateway: Gateway & { id?: string }) {
 }
 
 function getSettingPath(alarmType: NodeTypes) {
+	if (alarmType === 'door_node') return 'door'
 	return alarmType === 'angle_node' ? 'angle' : 'vertical'
 }
 
