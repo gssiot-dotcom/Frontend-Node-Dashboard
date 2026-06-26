@@ -7,25 +7,23 @@ import AlarmLevelSettings, {
 import GatewayAlarmControls from '@/features/manager/components/GatewayAlarmControls'
 import { useRealtimeRoom } from '@/hooks/useRealTime'
 import { mapTiltToUiState } from '@/lib/TiltMapper'
-import { formatNodeLocation } from '../utils/format-node-location'
 import { motion } from 'framer-motion'
-import { Activity, MapPinned, Search } from 'lucide-react'
+import { Activity, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import BuildingPlanLocationModal from '../components/BuildingPlanLocationModal'
-import BuildingPlanViewModal from '../components/BuildingPlanViewModal'
 import NodeCard from '../../../components/GangformNodeCard'
 import NodeCardSkeleton from '../../../components/NodeCardSkeleton'
 import {
 	useBuildingNodesPageQuery,
-	useUpdateFaultFilterMutation,
 	useUpdateBuildingAlarmLevelMutation,
+	useUpdateFaultFilterMutation,
 } from '../hooks/useBuildings'
 import { useUpdateNodePlanLocations } from '../hooks/useNodes'
 import { GatewayAlarmSetting } from '../types/building.types'
 import { GangformNode, GatewayRef, NodeTypes } from '../types/node.types'
+import { formatNodeLocation } from '../utils/format-node-location'
 
 export interface GangformPayload {
 	nodeNumber: number
@@ -207,7 +205,8 @@ export default function VerticalNodes() {
 			const matchesStatus =
 				statusFilter === 'all' || node._alertLevel === statusFilter
 			const matchesGateway =
-				gatewayFilter === 'all' || getGatewayId(node.gatewayId) === gatewayFilter
+				gatewayFilter === 'all' ||
+				getGatewayId(node.gatewayId) === gatewayFilter
 
 			return matchesSearch && matchesStatus && matchesGateway
 		})
@@ -461,7 +460,7 @@ export default function VerticalNodes() {
 
 					<div className='ml-auto shrink-0 max-sm:hidden'>
 						<div className='flex items-center gap-2'>
-							<Button
+							{/* <Button
 								variant='outline'
 								size='sm'
 								onClick={() => setPlanViewNodeId('')}
@@ -481,7 +480,7 @@ export default function VerticalNodes() {
 							>
 								<MapPinned className='w-3.5 h-3.5' />
 								{t('nodePages.setPlanPhoto')}
-							</Button>
+							</Button> */}
 
 							<AlarmLevelSettings
 								value={alarmLevels}
@@ -573,7 +572,7 @@ export default function VerticalNodes() {
 					}
 				/>
 
-				<BuildingPlanViewModal
+				{/* <BuildingPlanViewModal
 					isOpen={planViewNodeId !== null}
 					onClose={() => setPlanViewNodeId(null)}
 					activeNodeId={planViewNodeId}
@@ -589,7 +588,7 @@ export default function VerticalNodes() {
 					nodes={nodesWithUi}
 					planImageUrls={buildingPlanImageUrls}
 					onSave={handleSavePlanLocations}
-				/>
+				/> */}
 			</motion.div>
 		</div>
 	)
