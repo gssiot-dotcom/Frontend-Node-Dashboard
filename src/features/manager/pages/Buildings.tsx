@@ -343,6 +343,7 @@ export default function BuildingsPage() {
 													title='Building plan images'
 													imageType='plan'
 													currentImageCount={planImageKeys.length}
+													existingImageKeys={planImageKeys}
 												/>
 												<BuildingImagesUploadDialog
 													buildingId={selectedBuilding._id}
@@ -351,6 +352,7 @@ export default function BuildingsPage() {
 													title='Building Ready images'
 													imageType='ready'
 													currentImageCount={readyImageKeys.length}
+													existingImageKeys={readyImageKeys}
 												/>
 
 												<AssignGatewayDialog

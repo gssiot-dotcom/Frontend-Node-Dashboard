@@ -9,6 +9,7 @@ import type {
 	GetAssetUploadUrlParams,
 	GetAssetUploadUrlResponse,
 	RemoveAssetParams,
+	ReorderBuildingImagesParams,
 	SaveAssetParams,
 	UpdateCompanyDto,
 	UpdateCompanyMemberStatusesPayload,
@@ -143,6 +144,22 @@ export const companiesApi = {
 				deleteFromS3,
 			},
 		)
+
+		return response.data
+	},
+
+	reorderBuildingImages: async ({
+		kind,
+		companyId,
+		buildingId,
+		keys,
+	}: ReorderBuildingImagesParams) => {
+		const response = await request.post<Building>('/assets/company/reorder', {
+			kind,
+			companyId,
+			buildingId,
+			keys,
+		})
 
 		return response.data
 	},

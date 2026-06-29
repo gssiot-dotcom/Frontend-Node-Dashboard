@@ -337,6 +337,7 @@ export default function CompanyBuildingsPage() {
 													title='Building plan images'
 													imageType='plan'
 													currentImageCount={planImageKeys.length}
+													existingImageKeys={planImageKeys}
 												/>
 												<BuildingImagesUploadDialog
 													companyId={companyId}
@@ -346,6 +347,7 @@ export default function CompanyBuildingsPage() {
 													title='Building Ready images'
 													imageType='ready'
 													currentImageCount={readyImageKeys.length}
+													existingImageKeys={readyImageKeys}
 												/>
 
 												<AssignGatewayDialog

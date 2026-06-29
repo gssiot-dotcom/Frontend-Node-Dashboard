@@ -42,6 +42,13 @@ type SaveBuildingAssetPayload = {
 	key: string
 }
 
+type ReorderBuildingImagesPayload = {
+	kind: 'buildingPlanImage' | 'buildingRealImage'
+	companyId: string
+	buildingId: string
+	keys: string[]
+}
+
 export const managerApi = {
 	// My Company
 	getMyCompany: () => unwrap<Company>(request.get('/manager/company/me')),
@@ -157,4 +164,7 @@ export const managerApi = {
 		unwrap<{ deleted: boolean }>(
 			request.post('/manager/assets/remove', payload),
 		),
+
+	reorderBuildingImages: (payload: ReorderBuildingImagesPayload) =>
+		unwrap<Building>(request.post('/manager/assets/reorder', payload)),
 }

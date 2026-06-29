@@ -114,3 +114,10 @@ export type RemoveAssetParams = {
 	key: string
 	deleteFromS3?: boolean
 }
+
+export type ReorderBuildingImagesParams = {
+	kind: Extract<AssetKind, 'buildingPlanImage' | 'buildingRealImage'>
+	companyId: string
+	buildingId: string
+	keys: string[]
+}

@@ -174,6 +174,25 @@ type UploadBuildingImagesParams = {
 	files: File[]
 }
 
+type BuildingImageMutationParams = {
+	companyId: string
+	buildingId: string
+	imageType: 'plan' | 'ready'
+	key: string
+}
+
+type ReorderBuildingImagesParams = {
+	companyId: string
+	buildingId: string
+	imageType: 'plan' | 'ready'
+	keys: string[]
+}
+
+const getBuildingImageAssetKind = (
+	imageType: 'plan' | 'ready',
+): Extract<AssetKind, 'buildingPlanImage' | 'buildingRealImage'> =>
+	imageType === 'plan' ? 'buildingPlanImage' : 'buildingRealImage'
+
 export function useUploadBuildingImages() {
 	const queryClient = useQueryClient()
 
@@ -215,6 +234,57 @@ export function useUploadBuildingImages() {
 
 			return updatedBuilding
 		},
+
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ['admin-buildings-page', variables.companyId],
+			})
+		},
+	})
+}
+
+export function useRemoveBuildingImage() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({
+			companyId,
+			buildingId,
+			imageType,
+			key,
+		}: BuildingImageMutationParams) =>
+			companiesApi.removeAsset({
+				kind: getBuildingImageAssetKind(imageType),
+				companyId,
+				buildingId,
+				key,
+				deleteFromS3: true,
+			}),
+
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ['admin-buildings-page', variables.companyId],
+			})
+		},
+	})
+}
+
+export function useReorderBuildingImages() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({
+			companyId,
+			buildingId,
+			imageType,
+			keys,
+		}: ReorderBuildingImagesParams) =>
+			companiesApi.reorderBuildingImages({
+				kind: getBuildingImageAssetKind(imageType),
+				companyId,
+				buildingId,
+				keys,
+			}),
 
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({

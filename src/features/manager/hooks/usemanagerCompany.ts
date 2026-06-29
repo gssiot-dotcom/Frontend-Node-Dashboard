@@ -170,6 +170,11 @@ export const useManagerBuildingNodesPage = (
 // Assets
 // features/manager/api/manager.queries.ts ga qo'shiladi
 
+type ManagerBuildingImageType = 'plan' | 'ready'
+
+const getManagerBuildingImageKind = (imageType: ManagerBuildingImageType) =>
+	imageType === 'plan' ? 'buildingPlanImage' : 'buildingRealImage'
+
 export function useUploadManagerCompanyLogo() {
 	const qc = useQueryClient()
 
@@ -259,6 +264,67 @@ export function useUploadManagerBuildingImages() {
 
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: managerKeys.buildings() })
+			qc.invalidateQueries({ queryKey: managerKeys.buildingsPage() })
+			qc.invalidateQueries({ queryKey: managerKeys.dashboard() })
+		},
+	})
+}
+
+export function useRemoveManagerBuildingImage() {
+	const qc = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({
+			companyId,
+			buildingId,
+			imageType,
+			key,
+		}: {
+			companyId: string
+			buildingId: string
+			imageType: ManagerBuildingImageType
+			key: string
+		}) =>
+			managerApi.removeAsset({
+				kind: getManagerBuildingImageKind(imageType),
+				companyId,
+				buildingId,
+				key,
+			}),
+
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: managerKeys.buildings() })
+			qc.invalidateQueries({ queryKey: managerKeys.buildingsPage() })
+			qc.invalidateQueries({ queryKey: managerKeys.dashboard() })
+		},
+	})
+}
+
+export function useReorderManagerBuildingImages() {
+	const qc = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({
+			companyId,
+			buildingId,
+			imageType,
+			keys,
+		}: {
+			companyId: string
+			buildingId: string
+			imageType: ManagerBuildingImageType
+			keys: string[]
+		}) =>
+			managerApi.reorderBuildingImages({
+				kind: getManagerBuildingImageKind(imageType),
+				companyId,
+				buildingId,
+				keys,
+			}),
+
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: managerKeys.buildings() })
+			qc.invalidateQueries({ queryKey: managerKeys.buildingsPage() })
 			qc.invalidateQueries({ queryKey: managerKeys.dashboard() })
 		},
 	})

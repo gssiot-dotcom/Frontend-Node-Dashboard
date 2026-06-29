@@ -16,12 +16,20 @@ import {
 	useUpdateAdminBuildingGateways,
 	useUpdateAdminBuildingWorkers,
 } from '@/features/admin/hooks/useBuildings'
-import { useUploadBuildingImages } from '@/features/admin/hooks/useCompanies'
 import {
+	useRemoveBuildingImage,
+	useReorderBuildingImages,
+	useUploadBuildingImages,
+} from '@/features/admin/hooks/useCompanies'
+import { getAssetUrl } from '@/lib/getAssetUrl'
+import {
+	ArrowLeft,
+	ArrowRight,
 	ImagePlus,
 	Loader2,
 	Plus,
 	Search,
+	Trash2,
 	Upload,
 	UserPlus,
 	Wifi,
@@ -618,6 +626,7 @@ type BuildingImagesUploadDialogProps = {
 	title: string
 	imageType: 'plan' | 'ready'
 	currentImageCount?: number
+	existingImageKeys?: string[]
 }
 
 type BuildingImageItem = {
@@ -634,6 +643,7 @@ export function BuildingImagesUploadDialog({
 	title,
 	imageType,
 	currentImageCount = 0,
+	existingImageKeys = [],
 }: BuildingImagesUploadDialogProps) {
 	const MAX_IMAGES = 4
 
@@ -644,11 +654,17 @@ export function BuildingImagesUploadDialog({
 
 	const { mutateAsync: uploadBuildingImages, isPending: isUploading } =
 		useUploadBuildingImages()
+	const { mutateAsync: removeBuildingImage, isPending: isRemoving } =
+		useRemoveBuildingImage()
+	const { mutateAsync: reorderBuildingImages, isPending: isReordering } =
+		useReorderBuildingImages()
 
-	const availableSlots = Math.max(MAX_IMAGES - currentImageCount, 0)
+	const storedImageCount = existingImageKeys.length || currentImageCount
+	const isSavingExisting = isRemoving || isReordering
+	const availableSlots = Math.max(MAX_IMAGES - storedImageCount, 0)
 	const canUploadMore = images.length < availableSlots
 	const selectedCount = images.length
-	const totalCountAfterSelect = currentImageCount + selectedCount
+	const totalCountAfterSelect = storedImageCount + selectedCount
 
 	const resetImages = () => {
 		setImages(prev => {
@@ -713,6 +729,53 @@ export function BuildingImagesUploadDialog({
 		})
 	}
 
+	const handleRemoveExistingImage = async (key: string) => {
+		if (!companyId || isSavingExisting || isUploading) return
+
+		const confirmed = window.confirm('이 이미지를 삭제하시겠습니까?')
+
+		if (!confirmed) return
+
+		try {
+			await removeBuildingImage({
+				companyId,
+				buildingId,
+				imageType,
+				key,
+			})
+		} catch (error) {
+			console.error('Failed to remove building image:', error)
+		}
+	}
+
+	const handleMoveExistingImage = async (
+		index: number,
+		direction: -1 | 1,
+	) => {
+		if (!companyId || isSavingExisting || isUploading) return
+
+		const nextIndex = index + direction
+
+		if (nextIndex < 0 || nextIndex >= existingImageKeys.length) return
+
+		const nextKeys = [...existingImageKeys]
+		const target = nextKeys[index]
+
+		nextKeys[index] = nextKeys[nextIndex]
+		nextKeys[nextIndex] = target
+
+		try {
+			await reorderBuildingImages({
+				companyId,
+				buildingId,
+				imageType,
+				keys: nextKeys,
+			})
+		} catch (error) {
+			console.error('Failed to reorder building images:', error)
+		}
+	}
+
 	const handleSave = async () => {
 		if (!companyId) {
 			console.error('companyId is required')
@@ -761,8 +824,8 @@ export function BuildingImagesUploadDialog({
 				<div className='space-y-4 mt-2'>
 					<p className='text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2'>
 						최대 {MAX_IMAGES}장까지 이미지를 업로드할 수 있습니다.
-						{currentImageCount > 0 && (
-							<span className='ml-1'>현재 {currentImageCount}장 저장됨.</span>
+						{storedImageCount > 0 && (
+							<span className='ml-1'>현재 {storedImageCount}장 저장됨.</span>
 						)}
 					</p>
 
@@ -774,6 +837,77 @@ export function BuildingImagesUploadDialog({
 						className='hidden'
 						onChange={handleFileChange}
 					/>
+
+					{existingImageKeys.length > 0 && (
+						<div className='space-y-2'>
+							<div className='flex items-center justify-between'>
+								<p className='text-xs font-medium text-muted-foreground'>
+									저장된 이미지
+								</p>
+								{isSavingExisting && (
+									<span className='inline-flex items-center gap-1 text-xs text-muted-foreground'>
+										<Loader2 className='h-3 w-3 animate-spin' />
+										저장 중...
+									</span>
+								)}
+							</div>
+
+							<div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+								{existingImageKeys.map((key, index) => (
+									<div
+										key={key}
+										className='relative aspect-square rounded-xl border border-border bg-muted/30 overflow-hidden group'
+									>
+										<img
+											src={getAssetUrl(key)}
+											alt='Stored building image'
+											className='w-full h-full object-cover'
+										/>
+
+										<div className='absolute inset-x-2 top-2 flex items-center justify-between gap-1'>
+											<button
+												type='button'
+												onClick={() => handleMoveExistingImage(index, -1)}
+												disabled={index === 0 || isSavingExisting || isUploading}
+												className='w-7 h-7 rounded-full bg-background/90 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40'
+												aria-label='Move image left'
+											>
+												<ArrowLeft className='w-4 h-4' />
+											</button>
+
+											<button
+												type='button'
+												onClick={() => handleMoveExistingImage(index, 1)}
+												disabled={
+													index === existingImageKeys.length - 1 ||
+													isSavingExisting ||
+													isUploading
+												}
+												className='w-7 h-7 rounded-full bg-background/90 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40'
+												aria-label='Move image right'
+											>
+												<ArrowRight className='w-4 h-4' />
+											</button>
+										</div>
+
+										<button
+											type='button'
+											onClick={() => handleRemoveExistingImage(key)}
+											disabled={isSavingExisting || isUploading}
+											className='absolute bottom-2 right-2 w-7 h-7 rounded-full bg-background/90 border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-60'
+											aria-label='Delete image'
+										>
+											<Trash2 className='w-4 h-4' />
+										</button>
+
+										<span className='absolute bottom-2 left-2 rounded-full bg-background/90 border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground'>
+											{index + 1}
+										</span>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
 
 					<div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
 						{images.map(image => (
